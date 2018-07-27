@@ -1,0 +1,8 @@
+#lock directory & file creation for DIR
+lock_dirfile=/home/!USERNAME!/www
+#lock file editing for DIR
+lock_fileedit=/home/!USERNAME!/www/
+#lock read by owner only for FILE
+lock_ownerread=/home/!USERNAME!/www/wp-config.php
+#allow upload but deny php execution for DIR
+allowwrite_denyphp=/home/!USERNAME!/www/wp-content/uploads

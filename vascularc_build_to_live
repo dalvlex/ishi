@@ -1,0 +1,52 @@
+#!/usr/bin/php
+<?php
+echo "+ backup live_vascularc & build_vascularc\n";
+	$log = `/root/ishi/backup-control act=backup name=build_vascularc type=user`;
+	$log = `/root/ishi/backup-control act=backup name=live_vascularc type=user`;
+usleep(500000);
+echo "+ delete files in live_vascularc\n";
+	$log = `rm -rf /home/live_vascularc/www/*`;
+	$log = `rm -rf /home/live_vascularc/files`;
+	$log = `rm -rf /home/live_vascularc/media`;
+	$log = `rm -rf /home/live_vascularc/old-media`;
+usleep(500000);
+echo "+ copy files from build_vascularc to live_vascularc\n";
+	$log = `rsync -a /home/build_vascularc/www /home/live_vascularc/`;
+	$log = `rsync -a /home/build_vascularc/files /home/live_vascularc/`;
+	$log = `rsync -a /home/build_vascularc/media /home/live_vascularc/`;
+	$log = `rsync -a /home/build_vascularc/old-media /home/live_vascularc/`;
+usleep(500000);
+echo "+ recreate symlinks\n";
+        $log = `rm -rf /home/live_vascularc/www/JOU\=13221 /home/live_vascularc/www/public/journals/1/media /home/live_vascularc/www/public/journals/1/old-media`;
+        $log = `ln -s /home/live_vascularc/old-media /home/live_vascularc/www/JOU\=13221`;
+        $log = `ln -s /home/live_vascularc/media /home/live_vascularc/www/public/journals/1/media`;
+        $log = `ln -s /home/live_vascularc/old-media /home/live_vascularc/www/public/journals/1/old-media`;
+usleep(500000);
+echo "+ dump build_vascularc SQL DB\n";
+	$log = `mysqldump -u root build_vascularc > /root/ishi/build_vascularc.sql`;
+usleep(500000);
+echo "+ drop/recreate live_vascularc SQL DB\n";
+	$log = `mysql -u root -e "DROP DATABASE live_vascularc; CREATE DATABASE live_vascularc;"`;
+usleep(500000);
+echo "+ load build_vascularc SQL DB into live_vascularc\n";
+	$log = `mysql -u root live_vascularc < build_vascularc.sql`;
+	$log = `rm -rf /root/ishi/build_vascularc.sql`;
+usleep(500000);
+echo "+ change config.inc.php variables in live_vascularc\n";
+	$log = `sed -i 's/vascularcell\.publiverse\.online/vascularcell\.com/g' /home/live_vascularc/www/config.inc.php`;
+	$log = `sed -i 's/build_vascularc/live_vascularc/g' /home/live_vascularc/www/config.inc.php`;
+	$log = `sed -i 's/UPDG3KAwP7k5VVXZyqhRgQp7/sXMmwj6RX3M7NUQjgcsAje4W/g' /home/live_vascularc/www/config.inc.php`;
+usleep(500000);
+echo "+ delete live_mbs file caches\n";
+        $log = `find /home/live_vascularc/www/cache/ -type f -exec rm -rf {} \\;`;
+usleep(500000);
+echo "+ replace SQL DB strings using migrate\n";
+	$log = `/root/ishi/migrate-vascularc_build_to_live`;
+usleep(500000);
+echo "+ robots.txt allow\n";
+	$log = `cp /home/live_vascularc/www/robots_allow.txt /home/live_vascularc/www/robots.txt`;
+usleep(500000);
+echo "+ revert perms to live_vascularc\n";
+        $log = `chown -R live_vascularc:live_vascularc /home/live_vascularc/www/`;
+?>
+

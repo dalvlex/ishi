@@ -1,0 +1,141 @@
+### for apache + fcgid + suexec + mysql & cli
+################################################################################
+apt-get update
+apt-get upgrade
+apt-get install php5-cgi php5-cli libapache2-mod-fcgid apache2-suexec-custom apache2-mpm-worker mysql-server php5-mysql
+
+### set mysql pass conf for root
+cat <<'EOF' > /root/.my.cnf
+[client]
+user=root
+password=zQbGHXfPppRrFfCJn7FPVnRP
+EOF
+
+### enable modules
+################################################################################
+a2enmod fcgid suexec actions alias rewrite headers
+
+### set global fcgid configuration
+################################################################################
+cat <<'EOF' > /etc/apache2/mods-available/fcgid.conf
+<IfModule mod_fcgid.c>
+	AddHandler fcgid-script .php
+	FcgidConnectTimeout 20
+	FCGIWrapper /usr/bin/php5-cgi .php
+</IfModule>
+EOF
+
+
+### Create some shared mem file for fcgid
+mkdir -p /var/lib/apache2/fcgid; touch /var/lib/apache2/fcgid/shm
+
+
+### set suexec config for www-data
+################################################################################
+cat <<'EOF' > /etc/apache2/suexec/www-data
+/home
+cgi-bin
+# The first two lines contain the suexec document root and the suexec userdir suffix.
+EOF
+
+### add user
+################################################################################
+useradd -K UID_MIN=2000 -K UID_MAX=2500 -s /bin/bash -m test1
+
+### make dirs
+################################################################################
+mkdir -p /home/test1/cgi-bin; mkdir -p /home/test1/www; mkdir -p /home/test1/conf
+
+
+### set for each user /home/username/cgi-bin/php-fcgi-wrapper
+################################################################################
+cat <<'EOF' > /home/test1/cgi-bin/php-fcgi-wrapper
+#!/bin/sh
+# Wrapper for PHP-fcgi
+# This wrapper can be used to define settings before launching the PHP-fcgi binary.
+# Define the path to php.ini. This defaults to /etc/phpX/cgi.
+
+#PHP_INI_SCAN_DIR=/home/test1/conf
+#export PHP_INI_SCAN_DIR
+
+#export PHPRC=/home/test1/conf
+
+# Define the number of PHP child processes that will be launched.
+# This is low to control memory usage on a server that might launch
+# these processes for lots of domains.
+# Leave undefined to let PHP decide.
+export PHP_FCGI_CHILDREN=1
+
+# Maximum requests before a process is stopped and a new one is launched
+export PHP_FCGI_MAX_REQUESTS=5000
+# Launch the PHP CGI binary
+# This can be any other version of PHP which is compiled with FCGI support.
+exec /usr/bin/php5-cgi
+EOF
+
+### set perms
+################################################################################
+chown -R test1:test1 /home/test1; chmod +x /home/test1/cgi-bin/php-fcgi-wrapper
+
+### enable mysql, set in /home/username/conf/mysql.ini: extension=mysql.so
+### or even better, set it in /etc/php5/cgi/php.ini or FOR SURE IN /etc/php5/conf.d/mysql.ini
+################################################################################
+cat <<'EOF' > /home/test1/conf/mysql.ini
+extension=mysql.so
+EOF
+
+### enable mod_rewrite, set in /home/username/conf/mod_rewrite.ini: extension=mod_rewrite.so
+### or even better, set it in /etc/php5/cgi/php.ini
+################################################################################
+cat <<'EOF' > /home/test1/conf/mod_rewrite.ini
+extension=mod_rewrite.so
+EOF
+
+### set for each user /etc/apache2/site-available/username.conf as:
+################################################################################
+cat <<'EOF' > /etc/apache2/site-available/test1.conf
+<VirtualHost *:80>
+	DocumentRoot /home/test1/www
+	ServerName test1.testing.com
+	SuexecUserGroup test1 test1
+
+	<IfModule mod_fcgid.c>
+		AddHandler fcgid-script .php
+		FcgidConnectTimeout 20
+		FCGIWrapper /home/test1/cgi-bin/php-fcgi-wrapper .php
+	</IfModule>
+
+	<Directory "/home/test1/www">
+		AllowOverride FileInfo
+		Options -Indexes +ExecCGI -FollowSymlinks
+		Order deny,allow
+	        Allow from all
+	</Directory>
+
+	ErrorLog /var/log/apache2/error-test1.log
+	CustomLog /var/log/apache2/access-test1.log "combined"
+	LogLevel debug
+</VirtualHost>
+EOF
+
+### enable sites
+################################################################################
+a2ensite test1.conf 
+
+### disable function in /etc/php5/cgi/php/ini, add to disable_functions the following
+disable_functions=eval,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source
+
+### set ServerName in /etc/apache2/httpd.conf
+ServerName localhost
+
+### restart apache
+################################################################################
+service apache2 restart
+
+### add to crontab > crontab -e
+################################################################################
+# m h  dom mon dow   command
+0 5 * * * cd /root/ishi; ./backup-control act=backup name=ALL type=daily > /dev/null 2>&1
+0 7 6 * * cd /root/ishi; ./backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
+45 * * * * cd /root/ishi; ./backup-control act=rotate > /dev/null 2>&1 
+

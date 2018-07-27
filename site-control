@@ -1,0 +1,54 @@
+#!/usr/bin/php
+<?php
+require_once('.functions_main.php');
+
+read_args(arg_array($argv));
+
+function read_args($arg){
+	if(count($arg)<2||!isset($arg['act'])){
+		show_help($arg['script_name']);
+	}
+	elseif(
+		strpos($arg['act'],'add')!==FALSE&&
+		isset($arg['type'])&&(strpos($arg['type'],'build')!==FALSE||strpos($arg['type'],'live')!==FALSE)&&
+		strlen($arg['name'])>=3&&
+		strlen($arg['domain'])>=3&&
+		(!isset($arg['backups'])|| strpos($arg['backups'],'on')!==FALSE|| strpos($arg['backups'],'off')!==FALSE)
+		){
+			if(strlen($arg['name'])>10){
+				echo "Error: 'name' must have a maximum of 10 characters.\n";
+				exit;
+			}
+			if(site_add($arg['type'],$arg['name'],$arg['domain'],((isset($arg['email']))?$arg['email']:NULL),(isset($arg['backups'])&&$arg['backups']=="off")?0:1)){
+				echo "Site added!\n";
+			}else{
+				echo "Add failed!\n";
+			}
+	}
+	elseif(
+			strpos($arg['act'],'del')!==FALSE&&
+			isset($arg['name'])&&strlen($arg['name'])>=3&&
+			(!isset($arg['backups'])|| strpos($arg['backups'],'keep')!==FALSE|| strpos($arg['backups'],'delete')!==FALSE)
+			){
+		if(site_del($arg['name'],(isset($arg['backups'])&&$arg['backups']=="delete")?1:0)){
+			echo "Site deleted!\n";
+		}else{
+			echo "Delete failed!\n";
+		}
+	}
+	elseif(strpos($arg['act'],'list')!==FALSE){
+		list_sites();
+	}
+	else{
+		show_help($arg['script_name']);
+	}
+}
+
+function show_help($name){
+	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> [email=<enable-ssl@a-domain.com>] [backups=<on/off> (default on)]\n";
+	echo " Del site:\n   {$name} act=del name=<name> [backups=<keep/delete> (default keep)]\n";
+	echo " List sites:\n   {$name} act=list\n";
+}
+
+
+?>

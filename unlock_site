@@ -1,0 +1,64 @@
+#!/usr/bin/php
+<?php
+$conf_folder='/root/ishi/lock-conf/';
+$phpdeny_folder='/etc/nginx/sites-lock/';
+$config=array();
+if(empty($argv[1])){
+	echo "ERROR: No argument supplied!\n";
+	exit;
+}
+else{
+$name = $argv[1];
+}
+if(is_file($conf_folder.$name.".conf")===FALSE){
+	echo "ERROR: Configuration does not exist for {$name}\n";
+	exit;
+}
+
+echo "Reading config.\n";
+$file=file_get_contents($conf_folder.$name.".conf");
+if(strpos($file,'=')===FALSE){
+	echo "ERROR: No usable data in config file.\n";
+	exit;
+}
+$file=explode("\n",$file);
+foreach($file as $fv){
+	$fv=trim($fv);
+	if(strcmp(substr($fv,0,1),"#")===0|strpos($fv,"=")===FALSE) continue;
+	$fv=explode("=",$fv);
+	$config[$fv[0]][]=$fv[1];
+}
+if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
+	echo "ERROR: At least one of each must be present in config lock_dirfile, lock_fileedit, lock_ownerread, allowwrite_denyphp.\n";
+	exit;
+}
+echo "Unlocking site {$name}:\n";
+
+foreach($config['lock_dirfile'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Remove immutable flag for DIR {$cv}\n";
+        `chattr -i $cv`;
+        `find $cv -type f -exec chattr -i {} +`;
+}
+foreach($config['lock_dirfile'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Set relaxed permissions for DIR {$cv}\n";
+	`find $cv -type d -exec chmod 755 {} +`;
+	`find $cv -type f -exec chmod 644 {} +`;
+}
+foreach($config['lock_ownerread'] as $cv){
+        echo "- Set relaxed permissions for FILE {$cv}\n";
+	`chmod 600 $cv`;
+}
+foreach($config['lock_dirfile'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Change ownership to rightful owner for DIR {$cv}\n";
+	`chown -R $name:$name $cv`;
+}
+
+echo "- Allow PHP execution in all folders under {$name}\n";
+file_put_contents($phpdeny_folder.$name,"");
+
+echo "END - Nginx Reload\n";
+`service nginx reload`;
+?>

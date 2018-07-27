@@ -1,0 +1,54 @@
+#!/usr/bin/php
+<?php
+require_once('.functions_backup.php');
+
+read_args(arg_array($argv));
+
+function read_args($arg){
+	if(count($arg)<2){
+		show_help($arg['script_name']);
+	}
+	elseif(
+		strpos($arg['act'],'backup')!==FALSE&&
+				$arg['name']!==FALSE&&strlen($arg['name'])>=3&&
+			(isset($arg['type'])&&strlen($arg['type'])>=3&&
+			(strpos($arg['type'],'user')!==FALSE|| 
+			strpos($arg['type'],'daily')!==FALSE|| 
+			strpos($arg['type'],'weekly')!==FALSE||
+			strpos($arg['type'],'ALL')!==FALSE))
+		){
+			if(backup_site($arg['name'],$arg['type'])){
+				echo "Backup created!\n";
+			}else{
+				echo "Backup failed!\n";
+			}
+	}
+	elseif(strpos($arg['act'],'list')!==FALSE){
+		list_backups_nice((isset($arg['name'])&&strlen($arg['name'])>=3)?$arg['name']:"ALL");
+	}
+	elseif(strpos($arg['act'],'rotate')!==FALSE){
+		if(backup_rotate((isset($arg['name'])&&strlen($arg['name'])>=3)?$arg['name']:"ALL")){
+			echo "Rotate completed!\n";
+		}else{
+			echo "Rotate failed!\n";
+		}
+	}
+	elseif(strpos($arg['act'],'restore')!==FALSE&&strpos($arg['archive'],'.tar.gz')!==FALSE&&strlen($arg['name'])>=3){
+		if(!restore_from($arg['name'],$arg['archive'])){
+			echo "Restore failed!\n";
+		}else{
+			echo "Restore complete!\n";
+		}
+	}
+	else{
+		show_help($arg['script_name']);
+	}
+}
+
+function show_help($name){
+	echo " List backups:\n   {$name} act=list [name=<name> (default ALL)]\n";
+	echo " Backup rotate:\n   {$name} act=rotate [name=<name> (default ALL)]\n";
+	echo " Backup create:\n   {$name} act=backup name=<name/ALL> type=<user/daily/weekly/ALL>\n";
+	echo " Restore:\n   {$name} act=restore name=<name> archive=<archive_file>\n";
+}
+?>

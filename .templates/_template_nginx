@@ -1,0 +1,36 @@
+server {
+        listen 80; listen [::]:80; listen 443 ssl; listen [::]:443 ssl;
+        server_name !DOMAIN! www.!DOMAIN!;
+#ssl#        ssl_certificate      /etc/letsencrypt/live/!USERNAME!/fullchain.pem;
+#ssl#        ssl_certificate_key  /etc/letsencrypt/live/!USERNAME!/privkey.pem;
+
+        location ^~ /.well-known/acme-challenge/ { allow all; default_type "text/plain"; }
+
+        if ( $host ~ ^www\.(.+)$ ) { return 301 https://$1$request_uri; }
+#ssl#        if ( $scheme = http ) { return 301 https://$server_name$request_uri; }
+
+        root /home/!USERNAME!/www;
+        index index.php index.html index.htm;
+
+        location / {
+            try_files $uri $uri/ /index.php?$args;
+        }
+
+        include /etc/nginx/sites-lock/!USERNAME!;
+
+        location ~ \.php$ {
+            try_files $uri =404;
+            include fastcgi_params;
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+            fastcgi_pass 127.0.0.1:!PORT!;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+         }
+
+         location ~ /\.ht {
+                deny all;
+        }
+
+        access_log /var/log/nginx/access-!USERNAME!.log;
+        error_log /var/log/nginx/error-!USERNAME!.log;
+}

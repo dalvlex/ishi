@@ -1,0 +1,48 @@
+#!/usr/bin/php
+<?php
+echo "+ backup build_vascularc & live_vascularc\n";
+	$log = `/root/ishi/backup-control act=backup name=live_vascularc type=user`;
+	$log = `/root/ishi/backup-control act=backup name=build_vascularc type=user`;
+usleep(500000);
+echo "+ delete files in build_vascularc\n";
+	$log = `rm -rf /home/build_vascularc/www/*`;
+	$log = `rm -rf /home/build_vascularc/files`;
+	$log = `rm -rf /home/build_vascularc/media`;
+usleep(500000);
+echo "+ copy files from live_vascularc to build_vascularc\n";
+	$log = `rsync -a /home/live_vascularc/www /home/build_vascularc/`;
+	$log = `rsync -a /home/live_vascularc/files /home/build_vascularc/`;
+	$log = `rsync -a /home/live_vascularc/media /home/build_vascularc/`;
+usleep(500000);
+echo "+ recreate symlinks\n";
+	$log = `rm -rf /home/build_vascularc/www/JOU\=13221 /home/build_vascularc/www/public/journals/1/media`;
+        $log = `ln -s /home/build_vascularc/media /home/build_vascularc/www/public/journals/1/media`;
+usleep(500000);
+echo "+ dump live_vascularc SQL DB\n";
+	$log = `mysqldump -u root live_vascularc > /root/ishi/live_vascularc.sql`;
+usleep(500000);
+echo "+ drop/recreate build_vascularc SQL DB\n";
+	$log = `mysql -u root -e "DROP DATABASE build_vascularc; CREATE DATABASE build_vascularc;"`;
+usleep(500000);
+echo "+ load live_vascularc SQL DB into build_vascularc\n";
+	$log = `mysql -u root build_vascularc < live_vascularc.sql`;
+	$log = `rm -rf /root/ishi/live_vascularc.sql`;
+usleep(500000);
+echo "+ change config.inc.php variables in build_vascularc\n";
+	$log = `sed -i 's/vascularcell\.com/vascularcell\.publiverse\.online/g' /home/build_vascularc/www/config.inc.php`;
+	$log = `sed -i 's/live_vascularc/build_vascularc/g' /home/build_vascularc/www/config.inc.php`;
+	$log = `sed -i 's/sXMmwj6RX3M7NUQjgcsAje4W/UPDG3KAwP7k5VVXZyqhRgQp7/g' /home/build_vascularc/www/config.inc.php`;
+usleep(500000);
+echo "+ delete build_mbs file caches\n";
+        $log = `find /home/build_vascularc/www/cache/ -type f -exec rm -rf {} \\;`;
+usleep(500000);
+echo "+ replace SQL DB strings using migrate\n";
+	$log = `/root/ishi/migrate-vascularc_live_to_build`;
+usleep(500000);
+echo "+ robots.txt deny\n";
+	$log = `cp /home/build_vascularc/www/robots_deny.txt /home/build_vascularc/www/robots.txt`;
+usleep(500000);
+echo "+ revert perms to build_vascularc\n";
+	$log = `chown -R build_vascularc:build_vascularc /home/build_vascularc/www/`;
+?>
+

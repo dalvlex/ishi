@@ -1,0 +1,70 @@
+#find size of /home/
+du -h --max-depth=1 /home/ | sort -hr
+
+#find and replace in all .php files
+find /home/live_mycashcow/www/ -type f -name '*.php' -exec grep '/home/mycashco/public_html' {} + | awk -F ':' '{print $1;}' | xargs sed -i 's/\/home\/mycashco\/public_html/\/home\/live_mycashcow\/www/g'
+
+#generate letsencrypt cert - might have to do it for www. domain separately
+./letsencrypt-auto certonly --webroot --webroot-path /home/live_mycashcow/www/ --renew-by-default --email vlad.protopopescu@gmail.com --text --agree-tos -d mycashcow.com.au -d www.mycashcow.com.au
+
+#replace deprecated <? with <?php
+find /home/mycashco/public_html/ -type f -name '*.php' -exec grep '<?' {} + | grep -v '<?php' | awk -F ':' '{print $1;}' | xargs sed -i 's/<? /<?php/g'
+
+#ssl virtualhost for apache
+<VirtualHost *:80>
+	DocumentRoot /home/live_mycashcow/www
+	ServerName mycashcow.com.au
+	ServerAlias www.mycashcow.com.au
+	SuexecUserGroup live_mycashcow live_mycashcow
+
+        <IfModule mod_fcgid.c>
+                Include /etc/apache2/fcgid_general.conf
+                FCGIWrapper /home/live_mycashcow/cgi-bin/php-fcgi-wrapper .php
+        </IfModule>
+
+	<Directory "/home/live_mycashcow/www">
+		AllowOverride FileInfo Limit
+		Options -Indexes +ExecCGI
+		Order deny,allow
+		Allow from all
+		Require all granted
+	</Directory>
+
+	ErrorLog /var/log/apache2/error-live_mycashcow.log
+	CustomLog /var/log/apache2/access-live_mycashcow.log "combined"
+	LogLevel warn
+</VirtualHost>
+
+<VirtualHost *:443>
+	SSLEngine On
+   	SSLCertificateFile /etc/letsencrypt/live/mycashcow.com.au/cert.pem
+    	SSLCertificateKeyFile /etc/letsencrypt/live/mycashcow.com.au/privkey.pem
+    	SSLCACertificateFile /etc/letsencrypt/live/mycashcow.com.au/fullchain.pem
+
+        DocumentRoot /home/live_mycashcow/www
+        ServerName mycashcow.com.au
+        ServerAlias www.mycashcow.com.au
+        SuexecUserGroup live_mycashcow live_mycashcow
+
+	<FilesMatch "\.(cgi|shtml|phtml|php)$">
+   		SSLOptions +StdEnvVars
+	</FilesMatch>
+
+        <IfModule mod_fcgid.c>
+                Include /etc/apache2/fcgid_general.conf
+                FCGIWrapper /home/live_mycashcow/cgi-bin/php-fcgi-wrapper .php
+        </IfModule>
+
+        <Directory "/home/live_mycashcow/www">
+                AllowOverride FileInfo Limit
+                Options -Indexes +ExecCGI
+                Order deny,allow
+                Allow from all
+                Require all granted
+        </Directory>
+
+        ErrorLog /var/log/apache2/error-live_mycashcow.log
+        CustomLog /var/log/apache2/access-live_mycashcow.log "combined"
+        LogLevel warn
+</VirtualHost>
+

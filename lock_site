@@ -1,0 +1,88 @@
+#!/usr/bin/php
+<?php
+$conf_folder='/root/ishi/lock-conf/';
+$phpdeny_folder='/etc/nginx/sites-lock/';
+$config=array();
+if(empty($argv[1])){
+	echo "ERROR: No argument supplied!\n";
+	exit;
+}
+else{
+$name = $argv[1];
+}
+if(is_file($conf_folder.$name.".conf")===FALSE){
+	echo "ERROR: Configuration does not exist for {$name}\n";
+	exit;
+}
+
+echo "Reading config.\n";
+$file=file_get_contents($conf_folder.$name.".conf");
+if(strpos($file,'=')===FALSE){
+	echo "ERROR: No usable data in config file.\n";
+	exit;
+}
+$file=explode("\n",$file);
+foreach($file as $fv){
+	$fv=trim($fv);
+	if(strcmp(substr($fv,0,1),"#")===0|strpos($fv,"=")===FALSE) continue;
+	$fv=explode("=",$fv);
+	$config[$fv[0]][]=$fv[1];
+}
+if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
+	echo "ERROR: At least one of each must be present in config lock_dirfile, lock_fileedit, lock_ownerread, allowwrite_denyphp.\n";
+	exit;
+}
+echo "Safety unlock first.\n";
+`/root/ishi/unlock_site $name`;
+
+echo "Locking site {$name}:\n";
+foreach($config['lock_dirfile'] as $cv){
+	$cv=rtrim($cv,"/");
+	echo "- Lock directory & file creation for DIR {$cv}\n";
+	`chmod 555 $cv`;
+	`find $cv -type d -exec chmod 555 {} +`;
+}
+foreach($config['lock_fileedit'] as $cv){
+        $cv=rtrim($cv,"/")."/";
+        echo "- Lock file editing for DIR {$cv}\n";
+        `find $cv -type f -exec chmod 444 {} +`;
+}
+foreach($config['lock_ownerread'] as $cv){
+        echo "- Allow read only for owner for FILE {$cv}\n";
+        `chmod 400 $cv`;
+}
+foreach($config['allowwrite_denyphp'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Allow write for DIR {$cv}\n";
+        `find $cv -type d -exec chmod 755 {} +`;
+	`find $cv -type f -exec chmod 644 {} +`;
+}
+foreach($config['lock_dirfile'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Make all files immutable for DIR {$cv}\n";
+        `chattr +i $cv`;
+        `find $cv -type f -exec chattr +i {} +`;
+}
+foreach($config['allowwrite_denyphp'] as $cv){
+        $cv=rtrim($cv,"/");
+        echo "- Remove immutable flag for DIR {$cv}\n";
+        `chattr -i $cv`;
+        `find $cv -type f -exec chattr -i {} +`;
+}
+$phpd="";
+foreach($config['allowwrite_denyphp'] as $cv){
+        $cv=trim(str_replace('/home/'.$name.'/www/', '', $cv),"/");
+        echo "- Deny PHP execution in DIR {$cv}\n";
+		$phpd.=$cv.'|';
+}
+$phpd=trim($phpd,"|");
+$phpd='location ~* /('.$phpd.')/.*\.php$ {
+	return 403;
+}
+';
+file_put_contents($phpdeny_folder.$name,$phpd);
+
+echo "END - Nginx Reload\n";
+`service nginx reload`;
+
+?>

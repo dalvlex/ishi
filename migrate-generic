@@ -1,0 +1,132 @@
+#!/usr/bin/php5.6
+<?php
+/* **********************************************************************************************************************
+ * Change variables below
+ */
+
+//die("comment this line after editing!\n");
+
+//MYSQL credentials file or array
+$credentials='/root/.my.cnf';
+//$credentials=array('user'=>'user_name here', 'password'=>'password here');
+
+//DESTINATION SERVER
+$server_path='/home/live_publiverse/www';
+$server_db='live_publiverse';
+
+//REPLACE STRINGS
+//use http:// and without trailing /
+$old_url='http://publiverse.online';
+$new_url='https://publiverse.online';
+$old_path='/home/live_publiverse/www';
+$new_path='/home/live_publiverse/www';
+
+//IMPORTANT if you want to replace www.URL also.
+$check_for_www=1; //1;
+
+//if you want to check for escaped slashes \/
+$check_for_escaped=1;
+
+//IMPORTANT: after using this script, please check .htaccess
+
+
+/* **********************************************************************************************************************
+ * Script action below
+ */
+
+
+
+ob_start();
+
+
+mg_file_replace($old_url,$new_url);
+mg_file_replace($old_path,$new_path);
+mg_db_replace($old_url,$new_url);
+mg_db_replace($old_path,$new_path);
+
+if($check_for_www){
+	$old_url2=str_replace('http://', 'http://www.', $old_url);
+	mg_file_replace($old_url2,$new_url);
+	mg_db_replace($old_url2,$new_url);
+}
+
+
+if($check_for_escaped){
+	$old_url=str_replace('/',"\\\\\\/", $old_url);
+	$new_url=str_replace('/',"\\\\\\/", $new_url);
+	
+	mg_db_replace($old_url,$new_url);
+	mg_db_replace($old_path,$new_path);
+
+	if($check_for_www){
+        	$old_url2=str_replace(":\\\\\\/\\\\\\/", ":\\\\\\/\\\\\\/www.", $old_url);
+        	mg_db_replace($old_url2,$new_url);
+	}
+}
+
+//flush permalinks
+rtrim($server_path,'/');
+require($server_path."/wp-config.php");
+$wp_rewrite->flush_rules(TRUE);
+
+echo "Fixing perms (fonts/htaccess etc)\n";
+fix_perms($server_path."/");
+
+$out=ob_get_contents();
+ob_end_clean();
+print_r($out);
+
+/* **********************************************************************************************************************
+ * Functions
+ */
+function mg_file_replace($old,$new){
+	global $server_path; 
+
+	rtrim($server_path,'/');
+	rtrim($old,'/');
+	rtrim($new,'/');
+
+	$cmd="find {$server_path}/ -type f -name '*.php' -exec grep -Hi '{$old}' {} + | awk -F ':' '{print $1;}' | xargs sed -i 's/".mg_sed_escape($old)."/".mg_sed_escape($new)."/g'";
+	echo $cmd."\n";
+	$keep=`$cmd`;
+
+}
+
+function mg_db_replace($old,$new){
+	global $server_db, $credentials; 
+
+	rtrim($old,'/');
+	rtrim($new,'/');
+	
+	$credentials_n = mg_mysql_credentials();
+	$keep=`/root/ishi/.srdb.cli.php -h localhost -n {$server_db} -u {$credentials_n['user']} -p {$credentials_n['password']} -s "{$old}" -r "{$new}" |grep -v "0 changes found"`;
+	echo $keep;
+}
+
+function mg_sed_escape($string){
+	$string=str_replace(".", "\\.", $string);
+	$string=str_replace("/", "\\/", $string);
+	return $string;
+}
+
+
+function mg_mysql_credentials(){
+	global $credentials;
+	if(is_array($credentials)) { return $credentials; }
+	else {	
+		$credo=file_get_contents($credentials);
+		$user=reset(explode("\n",end(explode('user=',$credo))));
+		$password=reset(explode("\n",end(explode('password=',$credo))));
+	$credentials = array('user'=>$user, 'password'=>$password);
+	return array('user'=>$user, 'password'=>$password);
+	}
+}
+
+function fix_perms($path){
+        $perms='';
+        $perms.=`find {$path} -type d -exec chmod -v 755 {} +`;
+        $perms.=`find {$path} -type f -exec chmod -v 644 {} +`;
+        $perms.=`chmod 600 {$path}wp-config.php`;
+}
+
+?>

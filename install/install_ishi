@@ -1,0 +1,452 @@
+#!/bin/sh
+if ! which php > /dev/null; then
+   echo "PHP-cli not found! Installing."
+   apt-get -y update
+   apt-get install -y php-cli
+   #echo "Restart the install script to run the PHP part"
+   php -f install_ishi
+   exit
+else
+	php -f install_ishi
+	exit
+fi
+#the code above installs php-cli so we can run the rest of this installer script
+
+<?php
+echo "\nRunning PHP install script.\n";
+
+/*
+ * Set up password, domains, emails etc.
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+$s = array(	'passwd_mysql' => '9NS9F904DwV2E5KNwz59J38D', //mysql password
+			'smtp_main_domain' => 'publiverse.online', //domain used as mail host
+			'smtp_relay_host' => 'smtp.sendgrid.com',
+			'smtp_relay_port' => '587',
+			'smtp_ipv4_address' => '139.59.224.148',
+			'smtp_ipv6_address' => '2400:6180:0:d0::21fa:1',
+			'smtp_relay_user' => 'dalvlexa-gridcamp',
+			'smtp_relay_pass' => 'Snm2jl4XpPaLxtdXLTewQAVx',
+			//domains to which mail server responds
+			'domains' => array('publiverse.online', 'gridcamp.com', 'aaihc.org.au', 'dihc.org.au', 'vascularcell.com'),
+			'email_catchall' => 'vlad.protopopescu@gmail.com', //catch all email for above 'domains'
+			'initial_sites' => array(
+									array('type' => 'live',
+											'name' => 'publiverse',
+											'domain' => 'publiverse.online',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'gridcamp',
+											'domain' => 'gridcamp.com',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'dihc',
+											'domain' => 'dihc.org.au',
+											 ),
+									array('type' => 'live',
+											'name' => 'aaihc',
+											'domain' => 'aaihc.org.au',
+											 ),
+									array('type' => 'live',
+											'name' => 'redir1ihc',
+											'domain' => 'australasianimmunohistochemistry.org',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'redir2ihc',
+											'domain' => 'australasianimmunohistochemistrysociety.org',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'redir3ihc',
+											'domain' => 'diagnosticimmunohistochemistry.com',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'esro',
+											'domain' => 'estereofoto.ro',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'regmed',
+											'domain' => 'regenmedicine.org',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'murray',
+											'domain' => 'murrayeiland.com',
+											 ),
+									array('type' => 'live',
+											'name' => 'rigid3',
+											'domain' => 'rigid3.com',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'vascularc',
+											'domain' => 'vascularcell.com',
+											'backups' => 'off',
+											 ),
+									array('type' => 'live',
+											'name' => 'nab',
+											'domain' => 'norabarbu.com',
+											'backups' => 'off',
+											 ),
+
+									array('type' => 'build',
+											'name' => 'caterware',
+											'domain' => 'caterware.publiverse.online',
+											 ),
+									array('type' => 'build',
+											'name' => 'malitia',
+											'domain' => 'malitia.publiverse.online',
+											 ),
+									array('type' => 'build',
+											'name' => 'nab',
+											'domain' => 'nab.publiverse.online',
+											 ),
+									array('type' => 'build',
+											'name' => 'vascularc',
+											'domain' => 'vascularcell.publiverse.online',
+											 ),
+								),
+			);
+
+//new line character
+$nl = "\n";
+
+//set to true if you want to debug
+$debug = false;
+
+/*
+ * Configure script tasks
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+$run = array();
+
+//get rid of LC_LOCALE errors
+$run[]['file_create'] = array('file' => '/etc/default/locale',
+								'content' => '' );
+$run[]['execute'] = array('command' => 'locale-gen "en_US.UTF-8"' );
+//$run[]['execute'] = array('command' => 'dpkg-reconfigure -f noninteractive locales' );
+$run[]['file_create'] = array('file' => '/etc/profile',
+								'content' => "{$nl}export LANGUAGE=en_US.UTF-8{$nl}export LANG=en_US.UTF-8{$nl}export LC_ALL=en_US.UTF-8{$nl}",
+								'append' => true );
+
+//setup lock untill relogin to ensure LOCALES are set properly
+$run[]['file_create'] = array('file' => '.ishi_relogin_lock',
+								'content' => count($run) );
+
+//get server up to date
+$run[]['execute'] = array('command' => 'apt-get -y update' );
+$run[]['execute'] = array('command' => 'apt-get -y upgrade' );
+
+//install debconf so we can pass settings non-interactively
+$run[]['execute'] = array('command' => 'apt-get install -y debconf-utils' );
+
+//install mysql
+$run[]['execute'] = array('command' => 'echo "mysql-server mysql-server/root_password password '.$s['passwd_mysql'].'" | debconf-set-selections' );
+$run[]['execute'] = array('command' => 'echo "mysql-server mysql-server/root_password_again password '.$s['passwd_mysql'].'" | debconf-set-selections' );
+$run[]['execute'] = array('command' => 'apt-get install -y mysql-server' );
+$run[]['file_create'] = array('file' => '/root/.my.cnf',
+								'content' => "[client]{$nl}user=root{$nl}password=".$s['passwd_mysql'].$nl );
+
+//install php-fpm and related modules
+$run[]['execute'] = array('command' => 'apt-get install -y php-fpm' );
+$run[]['execute'] = array('command' => 'apt-get install -y php-mcrypt' );
+$run[]['execute'] = array('command' => 'apt-get install -y php-mbstring' );
+$run[]['execute'] = array('command' => 'apt-get install -y php-gd' );
+$run[]['execute'] = array('command' => 'apt-get install -y php-mysql' );
+$run[]['replace_inline'] = array('file' => '/etc/php/7.0/fpm/php.ini',
+									'line_search' => "cgi.fix_pathinfo=",
+									'line_replace' => "cgi.fix_pathinfo=0" );
+$run[]['replace_inline'] = array('file' => '/etc/php/7.0/fpm/conf.d/10-opcache.ini',
+									'line_search' => "zend_extension=",
+									'line_replace' => ";zend_extension=opcache.so" );
+$run[]['execute'] = array('command' => 'mv /etc/php/7.0/fpm/pool.d/www.conf /etc/php/7.0/fpm/' );
+$run[]['execute'] = array('command' => 'service php7.0-fpm restart' );
+
+$run[]['execute'] = array('command' => 'echo "net.core.somaxconn=65536" >> /etc/sysctl.conf' );
+$run[]['execute'] = array('command' => 'sysctl -p' );
+
+//install and configure nginx
+$run[]['execute'] = array('command' => 'apt-get install -y nginx' );
+$run[]['execute'] = array('command' => 'rm -rf /etc/nginx/sites-enabled/*' );
+$run[]['execute'] = array('command' => 'mkdir /etc/nginx/sites-lock' );
+
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "http {",
+									'line_replace' => "http {{$nl}open_file_cache max=5000 inactive=20s;{$nl}open_file_cache_valid    30s;{$nl}open_file_cache_min_uses 2;{$nl}open_file_cache_errors   on;{$nl}" );
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "worker_processes",
+									'line_replace' => "worker_processes 2;" );
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "worker_connections",
+									'line_replace' => "worker_connections 2048;" );
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "multi_accept",
+									'line_replace' => "multi_accept on;{$nl}use epoll;{$nl}" );
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "server_tokens",
+									'line_replace' => "server_tokens off;" );
+$run[]['replace_inline'] = array('file' => '/etc/nginx/nginx.conf',
+									'line_search' => "server_tokens",
+									'line_replace' => "server_tokens off;" );
+$run[]['replace_word'] = array('file' => '/etc/nginx/nginx.conf', 'search' => '# gzip_', 'replace' => ' gzip_' );
+
+
+$run[]['execute'] = array('command' => 'service nginx restart' );
+
+//install letsencrypt
+$run[]['execute'] = array('command' => 'apt-get install -y git' );
+$run[]['execute'] = array('command' => 'git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt' );
+
+//init letsencrypt and install dependencies
+$run[]['execute'] = array('command' => '/opt/letsencrypt/letsencrypt-auto renew' );
+
+//install and configure postfix
+$run[]['execute'] = array('command' => 'echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections' );
+$run[]['execute'] = array('command' => 'apt-get install -y postfix' );
+
+//default template for postfix
+$run[]['template'] = array('source' => '.templates/_template_main.cf', 'destination' => '/etc/postfix/main.cf' );
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_main_domain!', 'replace' => $s['smtp_main_domain']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_relay_host!', 'replace' => $s['smtp_relay_host']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_relay_port!', 'replace' => $s['smtp_relay_port']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_ipv4_address!', 'replace' => $s['smtp_ipv4_address']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_ipv6_address!', 'replace' => $s['smtp_ipv6_address']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_relay_user!', 'replace' => $s['smtp_relay_user']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!smtp_relay_pass!', 'replace' => $s['smtp_relay_pass']);
+$run[]['replace_word'] = array('file' => '/etc/postfix/main.cf', 'search' => '!DOMAINS!', 'replace' => implode(', ',$s['domains']) );
+
+$run[]['file_create'] = array('file' => '/etc/postfix/virtual_alias_domains',
+								'content' => set_mail_forwarding($s['domains']) );
+
+$run[]['execute'] = array('command' => 'postmap /etc/postfix/virtual_alias_domains' );
+//$run[]['execute'] = array('command' => 'postconf -e "alias_maps ="' );
+$run[]['execute'] = array('command' => 'service postfix restart' );
+
+
+//install and configure postgrey
+$run[]['execute'] = array('command' => 'apt-get install -y postgrey' );
+$run[]['replace_inline'] = array('file' => '/etc/default/postgrey',
+									'line_search' => 'POSTGREY_OPTS=',
+									'line_replace' => 'POSTGREY_OPTS="--inet=10023 --delay 10"' );
+$run[]['execute'] = array('command' => 'service postgrey restart' );
+
+//install spamassassin
+$run[]['execute'] = array('command' => 'apt-get install -y spamassassin' );
+$run[]['execute'] = array('command' => 'apt-get install -y spamc' );
+
+$run[]['execute'] = array('command' => 'groupadd spamd' );
+$run[]['execute'] = array('command' => 'useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd' );
+$run[]['execute'] = array('command' => 'mkdir /var/log/spamassassin' );
+$run[]['execute'] = array('command' => 'chown spamd:spamd /var/log/spamassassin' );
+
+$run[]['replace_inline'] = array('file' => '/etc/default/spamassassin',
+									'line_search' => 'ENABLED=',
+									'line_replace' => 'ENABLED=1' );
+$run[]['replace_inline'] = array('file' => '/etc/default/spamassassin',
+									'line_search' => 'CRON=',
+									'line_replace' => 'CRON=1' );
+$run[]['replace_inline'] = array('file' => '/etc/default/spamassassin',
+									'line_search' => 'OPTIONS=',
+									'line_replace' => "SAHOME=\"/var/log/spamassassin/\"{$nl}OPTIONS=\"--create-prefs --max-children 2 --username spamd \\{$nl}-H \${SAHOME} -s \${SAHOME}spamd.log\"" );
+
+$run[]['execute'] = array('command' => 'service spamassassin restart' );
+
+$run[]['replace_inline'] = array('file' => '/etc/postfix/master.cf',
+									'line_search' => "smtp      inet  n       -       y       -       -       smtpd",
+									'line_replace' => " -o content_filter=spamassassin",
+									'append' => true );
+$run[]['file_create'] = array('file' => '/etc/postfix/master.cf',
+								'content' => "{$nl}spamassassin unix -     n       n       -       -       pipe{$nl}\t\tuser=spamd argv=/usr/bin/spamc -f -e{$nl}\t\t/usr/sbin/sendmail -oi -f \${sender} \${recipient}{$nl}",
+								'append' => true );
+
+$run[]['execute'] = array('command' => 'service postfix restart' );
+
+$run[]['replace_inline'] = array('file' => '/etc/spamassassin/local.cf',
+									'line_search' => 'rewrite_header',
+									'line_replace' => 'rewrite_header Subject [***** SPAM _SCORE_ *****]' );
+$run[]['replace_inline'] = array('file' => '/etc/spamassassin/local.cf',
+									'line_search' => 'required_score',
+									'line_replace' => 'required_score 3.0' );
+$run[]['replace_inline'] = array('file' => '/etc/spamassassin/local.cf',
+									'line_search' => 'use_bayes',
+									'line_replace' => 'use_bayes 1' );
+$run[]['replace_inline'] = array('file' => '/etc/spamassassin/local.cf',
+									'line_search' => 'bayes_auto_learn',
+									'line_replace' => 'bayes_auto_learn 1' );
+
+$run[]['execute'] = array('command' => 'service spamassassin restart' );
+
+//setup crontab
+$run[]['execute'] = array('command' => 'crontab /root/ishi/.templates/_crontab_file' );
+
+//chmod +x ishi files
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/site-control' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/backup-control' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/migrate-generic' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/.srdb.cli.php' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/.srdb.class.php' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/lock_site' );
+$run[]['execute'] = array('command' => 'chmod +x /root/ishi/unlock_site' );
+
+//install initial sites
+$run[]['initial_sites'] = $s['initial_sites'];
+
+//setup ufw firewall
+$run[]['execute'] = array('command' => 'ufw disable' );
+$run[]['execute'] = array('command' => 'ufw allow ssh' );
+$run[]['execute'] = array('command' => 'ufw allow http' );
+$run[]['execute'] = array('command' => 'ufw allow https' );
+$run[]['execute'] = array('command' => 'ufw allow 25' );
+$run[]['execute'] = array('command' => 'ufw --force enable' );
+
+//install and configure fail2ban
+$run[]['execute'] = array('command' => 'apt-get install -y python' );
+$run[]['execute'] = array('command' => 'apt-get install -y python-pyinotify' );
+$run[]['execute'] = array('command' => 'apt-get install -y gamin' );
+$run[]['execute'] = array('command' => 'apt-get install -y systemd' );
+$run[]['execute'] = array('command' => 'apt-get install -y python-dnspython' );
+
+$run[]['execute'] = array('command' => 'git clone https://github.com/fail2ban/fail2ban /root/ishi/fail2ban' );
+$run[]['execute'] = array('command' => 'cd /root/ishi/fail2ban; python setup.py install --home=/root/ishi/fail2ban' );
+
+$run[]['execute'] = array('command' => 'cp /root/ishi/fail2ban/files/debian-initd /etc/init.d/fail2ban' );
+$run[]['execute'] = array('command' => 'update-rc.d fail2ban defaults' );
+$run[]['execute'] = array('command' => 'service fail2ban start' );
+$run[]['execute'] = array('command' => 'rm -rf /root/ishi/fail2ban' );
+
+/*
+ * Functions for task content
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+function set_mail_forwarding(){
+	global $s, $nl;
+	$str = '';
+	foreach($s['domains'] as $d){
+		$str .= "@{$d}\t\t\t{$s['email_catchall']}{$nl}";
+	}
+	return $str;
+}
+
+/*
+ * General functions
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+function check_if_present($file, $search = NULL){
+	$content = file_get_contents($file);
+	if($content === FALSE) return false;
+	if($search === NULL) return true;
+	if(strpos($content, $search) === FALSE) return false;
+	return true;
+}
+
+function replace_inline($file, $search, $replace, $append = NULL){
+        file_put_contents($file, implode('',
+          array_map(function($data) use($search, $replace, $append) {
+            return (strpos($data, $search)!==FALSE) ? (($append) ? substr($data,0,strlen($data)-1).$replace."\n" : $replace."\n") : $data;
+          }, file($file))
+        ));
+}
+
+function replace_word($file, $search, $replace){
+	return `sed -i 's/{$search}/{$replace}/g' {$file}`;
+}
+
+function show_error($rk, $rv){
+	echo "\nERROR at {$rk}: ".var_dump($rv)."\n";
+	exit;
+
+}
+
+function check_if_relogin(){
+	$data = @file_get_contents('.ishi_relogin_lock');
+	if(strpos(getenv("LC_ALL"), 'UTF-8')!==FALSE){
+		global $skip;
+		if(!$skip){
+			if(!$data){
+				$skip = file_get_contents('.ishi_relogin_continue');
+			}else{
+				$skip = $data;
+				file_put_contents('.ishi_relogin_continue', $data);
+			}
+		}
+		if($data)
+			unlink('.ishi_relogin_lock');
+		return;
+	}
+	elseif($data) {
+		echo "Please logout and login to the terminal so your LOCALE variables are reset.\n";
+		echo "After login restart the install script.\n";
+		exit;
+	}
+
+}
+
+/*
+ * Run tasks
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+foreach($run as $rk => $rv){
+	//if($rk < 73) continue;
+	foreach($rv as $task => $param){
+		//force user to relogin in order to set LOCALE
+		check_if_relogin();
+
+		//check if user has relogin and skip first tasks that were already done
+		if(isset($skip) && $rk <= $skip) continue;
+
+		//show current task
+		echo "\n{$task} => "; print_r($param);
+
+		//execute current task
+		switch ($task) {
+		    case 'file_create':
+		        if(isset($param['append']) && $param['append']){
+		        	$keep = file_put_contents($param['file'], $param['content'], FILE_APPEND);
+		        } else{
+		        	$keep =file_put_contents($param['file'], $param['content']);
+		        }
+		        break;
+		    case 'execute':
+		        $keep = `{$param['command']}`;
+		        break;
+		    case 'replace_inline':
+		    	if(!check_if_present($param['file'], $param['line_search'])) show_error($rk, $rv);
+		        $keep = replace_inline($param['file'], $param['line_search'], $param['line_replace'], ((isset($param['append'])&&$param['append'])?$param['append']:NULL) );
+		        break;
+		    case 'template':
+		    	if(!check_if_present($param['source'])) show_error($rk, $rv);
+		    	$keep = file_put_contents($param['destination'],file_get_contents($param['source']));
+		    	break;
+		    case 'replace_word':
+		    	if(!check_if_present($param['file'], $param['search'])) show_error($rk, $rv);
+		    	$keep = replace_word($param['file'], $param['search'], $param['replace']);
+		    	break;
+		    case 'php':
+		    	$keep = eval($param['command']);
+		    	break;
+		    case 'initial_sites':
+		    	foreach($param as $site){
+		    		$keep = '/root/ishi/site-control act=add type='.$site['type'].' name='.$site['name'].' domain='.$site['domain'].' '.((isset($site['email']) && $site['email'])?'email='.$site['email']:'').' '.((isset($site['backups']) && $site['backups'])?'backups='.$site['backups']:'');
+		    		$keep = `{$keep}`;
+		    	}
+		    	break;
+		    default:
+		        echo "\nERROR: Task routine inexistent!\n";
+		        exit;
+		}
+
+		if($debug){
+			echo "{$rk}-debug-task: ".var_dump($rv)."\n";
+			echo "{$rk}-debug-response: ".var_dump($keep)."\n----------------------\n";
+			$line = readline("Press 'Enter' to continue or Ctrl+C to quit.");
+		}
+
+		sleep(1);
+	}
+}
+
+echo "\nScript execution finished, one way or another\n";
+
+?>

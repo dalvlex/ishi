@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+0 5 * * * cd /root/ishi; ./backup-control act=backup name=ALL type=daily > /dev/null 2>&1
+0 7 6 * * cd /root/ishi; ./backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
+45 * * * * cd /root/ishi; ./backup-control act=rotate > /dev/null 2>&1 
+
