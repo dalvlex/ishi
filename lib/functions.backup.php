@@ -1,5 +1,4 @@
 <?php
-require_once('.functions_main.php');
 
 $backup_types=array('daily'=>1,'weekly'=>1,'user'=>1);
 

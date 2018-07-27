@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-require_once('../lib/functions.main.php');
+require_once( realpath( dirname( __FILE__ ) ) . '/../lib/functions.main.php' );
 
 read_args(arg_array($argv));
 
