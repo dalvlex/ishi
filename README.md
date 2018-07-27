@@ -8,7 +8,7 @@ service ssh restart
 
 apt update
 
-apt install debconf-utils mysql-server #take note of mySQL password
+apt install debconf-utils mysql-server #take note of mySQL password if auth isn't made with PAM
 apt install php-fpm php-cli php-mysql
 apt install git fail2ban letsencrypt
 
