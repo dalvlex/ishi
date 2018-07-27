@@ -1,6 +1,6 @@
-lock-conf/
-.settings
-.store_backups
-.store_rsa
-.store_sites
-.backups/
+etc/sites-locked/
+settings
+backups
+rsa
+sites
+var/backups/
