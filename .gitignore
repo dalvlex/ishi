@@ -1,6 +1,6 @@
 etc/sites-locked/
-settings
-backups
-rsa
-sites
+etc/settings
+etc/backups
+etc/rsa
+etc/sites
 var/backups/
