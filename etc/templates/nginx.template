@@ -16,7 +16,7 @@ server {
             try_files $uri $uri/ /index.php?$args;
         }
 
-        include /etc/nginx/sites-lock/!USERNAME!;
+        include /etc/nginx/sites-locked/!USERNAME!;
 
         location ~ \.php$ {
             try_files $uri =404;
