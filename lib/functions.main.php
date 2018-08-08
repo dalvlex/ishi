@@ -194,13 +194,23 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	$keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
 	$keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
 
-	//add nginx
-    $keep.=`cp {$pwd}/etc/templates/nginx.template /etc/nginx/sites-available/{$name}`;
-    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/nginx/sites-available/{$name}`;
-    $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/nginx/sites-available/{$name}`;
-    $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/nginx/sites-available/{$name}`;
-    $keep.=`mkdir -p /etc/nginx/sites-locked`;
-    $keep.=`touch /etc/nginx/sites-locked/{$name}`;
+	//add nginx or apache2
+	if($settings['.web'] == 'nginx'){
+	    $keep.=`cp {$pwd}/etc/templates/nginx.template /etc/nginx/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/nginx/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/nginx/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/nginx/sites-available/{$name}`;
+	    $keep.=`mkdir -p /etc/nginx/sites-locked`;
+	    $keep.=`touch /etc/nginx/sites-locked/{$name}`;
+	}
+	else{
+	    $keep.=`cp {$pwd}/etc/templates/apache2.template /etc/apache2/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/apache2/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/apache2/sites-available/{$name}`;
+	    $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/apache2/sites-available/{$name}`;
+	    $keep.=`mkdir -p /etc/apache2/sites-locked`;
+	    $keep.=`touch /etc/apache2/sites-locked/{$name}`;
+	}
 
     //create locking template
     $keep.=`cp {$pwd}/etc/templates/site-lock.template {$pwd}/etc/sites-locked/{$name}.conf`;
@@ -217,18 +227,38 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	$new_site[$name]=array('domain'=>$domain,'u_ssh'=>$name,'p_ssh'=>'','u_mysql'=>$name,'p_mysql'=>$mysql_pass,'backups'=>$backups);
 	write_sites('add',$new_site);
 
-	//enable nginx
-	$keep.=`ln -s /etc/nginx/sites-available/{$name} /etc/nginx/sites-enabled/{$name}`;
+	//enable nginx or apache2
+	if($settings['.web'] == 'nginx'){
+		$keep.=`ln -s /etc/nginx/sites-available/{$name} /etc/nginx/sites-enabled/{$name}`;
+	}
+	else{
+		$keep.=`ln -s /etc/apache2/sites-available/{$name} /etc/apache2/sites-enabled/{$name}.conf`;
+	}
 
-	//restart servers
+	//restart php server
 	$keep.=`service php{$settings['.php']}-fpm restart`;
-	$keep.=`service nginx restart`;
 
-	if(strpos($email,'@')!==FALSE){
+	//restart nginx or apache2 server
+	if($settings['.web'] == 'nginx'){
+		$keep.=`service nginx restart`;
+	}
+	else{
+		$keep.=`service apache2 restart`;
+	}
+
 	//get ssl certificate
-	$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
-	$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
-	$keep.=`service nginx restart`;
+	if(strpos($email,'@')!==FALSE){
+		$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
+
+		// add SSL certificate to nginx or apache2
+		if($settings['.web'] == 'nginx'){
+			$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
+			$keep.=`service nginx restart`;
+		}
+		else{
+			$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}`;
+			$keep.=`service apache2 restart`;
+		}
 	}
 
 	return TRUE;
@@ -244,7 +274,7 @@ function site_del($name, $backups=0){
 	}
 
 	//get domain name
-	$domain = trim(`cat /etc/nginx/sites-enabled/{$name} |grep "fullchain.pem" |awk -F "/" '{print $5}'`);
+	$domain = trim(`cat {$settings['.store_sites']} |grep {$name} |awk -F ":" '{print $2}'`);
 
 	//remove immutable flag
 	$keep=`find /home/{$name}/ -type f -exec chattr -i {} \;`;
@@ -263,21 +293,42 @@ function site_del($name, $backups=0){
 	//delete site from list
 	write_sites('del',$name);
 
-	//delete nginx site
-	$keep.=`rm -rf /etc/nginx/sites-available/{$name}`;
-	$keep.=`rm -rf /etc/nginx/sites-enabled/{$name}`;
-	$keep.=`rm -rf /etc/nginx/sites-locked/{$name}`;
+	//delete nginx or apache2 site
+	if($settings['.web'] == 'nginx'){
+		$keep.=`rm -rf /etc/nginx/sites-available/{$name}`;
+		$keep.=`rm -rf /etc/nginx/sites-enabled/{$name}`;
+		$keep.=`rm -rf /etc/nginx/sites-locked/{$name}`;
+	}
+	else{
+		$keep.=`rm -rf /etc/apache2/sites-available/{$name}`;
+		$keep.=`rm -rf /etc/apache2/sites-enabled/{$name}.conf`;
+		$keep.=`rm -rf /etc/apache2/sites-locked/{$name}`;
+	}
 
+	//delete php site & locking config
 	$keep.=`rm -rf /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
 	$keep.=`rm -rf {$pwd}/etc/sites-locked/{$name}.conf`;
 
-	//delete logs
-	$keep.=`rm -rf /var/log/nginx/access-{$name}.*`;
-	$keep.=`rm -rf /var/log/nginx/error-{$name}.*`;
+	//delete logs from nginx or apache2
+	if($settings['.web'] == 'nginx'){
+		$keep.=`rm -rf /var/log/nginx/access-{$name}.*`;
+		$keep.=`rm -rf /var/log/nginx/error-{$name}.*`;
+	}
+	else{
+		$keep.=`rm -rf /var/log/apache2/access-{$name}.*`;
+		$keep.=`rm -rf /var/log/apache2/error-{$name}.*`;
+	}
 
-	//restart server
+	//restart php server
 	$keep.=`service php{$settings['.php']}-fpm restart`;
-	$keep.=`service nginx restart`;
+
+	//restart nginx or apache2 server
+	if($settings['.web'] == 'nginx'){
+		$keep.=`service nginx restart`;
+	}
+	else{
+		$keep.=`service apache2 restart`;
+	}
 
 	//delete ssl
 	$keep.=`rm -rf /etc/letsencrypt/renewal/{$domain}.conf`;
@@ -320,9 +371,9 @@ function delete_site_backup($name){
 	global $f_settings;
 	$settings=read_settings($f_settings);
 
-	$keep=`rm -rf {$$settings['.backup_path']}/{$name}-daily_*`;
-	$keep.=`rm -rf {$$settings['.backup_path']}/{$name}-user_*`;
-	$keep.=`rm -rf {$$settings['.backup_path']}/{$name}-weekly_*`;
+	$keep=`rm -rf {$settings['.backup_path']}/{$name}-daily_*`;
+	$keep.=`rm -rf {$settings['.backup_path']}/{$name}-user_*`;
+	$keep.=`rm -rf {$settings['.backup_path']}/{$name}-weekly_*`;
 
 	//replace backup store
 	$b_store=$settings['.store_backups'];

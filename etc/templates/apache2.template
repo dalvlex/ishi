@@ -1,0 +1,50 @@
+<VirtualHost *:80>
+	DocumentRoot /home/!USERNAME!/www
+	ServerName !DOMAIN!
+	ServerAlias www.!DOMAIN!
+	SuexecUserGroup !USERNAME! !USERNAME!
+
+	<FilesMatch \.php$>
+		SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
+	</FilesMatch>
+
+	<Directory "/home/!USERNAME!/www">
+		Include /etc/apache2/sites-locked/!USERNAME!
+		AllowOverride FileInfo Limit
+		Options -Indexes +ExecCGI
+		Order deny,allow
+		Require all granted
+	</Directory>
+
+	ErrorLog /var/log/apache2/error-!USERNAME!.log
+	CustomLog /var/log/apache2/access-!USERNAME!.log "combined"
+	LogLevel warn
+</VirtualHost>
+
+#ssl#<VirtualHost *:443>
+#ssl#        SSLEngine On
+#ssl#        SSLCertificateFile /etc/letsencrypt/live/!DOMAIN!/cert.pem
+#ssl#        SSLCertificateKeyFile /etc/letsencrypt/live/!DOMAIN!/privkey.pem
+#ssl#        SSLCACertificateFile /etc/letsencrypt/live/!DOMAIN!/fullchain.pem
+
+#ssl#        DocumentRoot /home/!USERNAME!/www
+#ssl#        ServerName !DOMAIN!
+#ssl#        ServerAlias www.!DOMAIN!
+#ssl#        SuexecUserGroup !USERNAME! !USERNAME!
+
+#ssl#        <FilesMatch \.php$>
+#ssl#                SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
+#ssl#        </FilesMatch>
+
+#ssl#        <Directory "/home/!USERNAME!/www">
+#ssl#		     Include /etc/apache2/sites-locked/!USERNAME!
+#ssl#                AllowOverride FileInfo Limit
+#ssl#                Options -Indexes +ExecCGI
+#ssl#                Order deny,allow
+#ssl#                Require all granted
+#ssl#        </Directory>
+
+#ssl#        ErrorLog /var/log/apache2/error-!USERNAME!.log
+#ssl#        CustomLog /var/log/apache2/access-!USERNAME!.log "combined"
+#ssl#        LogLevel warn
+#ssl#</VirtualHost>
