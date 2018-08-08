@@ -26,34 +26,33 @@ Be sure to change *eu-central-1* to whatever you Amazon S3 zone is, because s3fs
 Use `-o dbglevel=info -f -o curldbg` for debugging.  
 
 ### System prerequisites
-Fix environment lang variables in ssh and disable password auth  
+1. Fix environment lang variables in ssh and disable password auth  
 `sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
 `sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
 `service ssh restart`
 
-Update the system
+2. Update the system
 `apt update`
 
-Add general packages
+3. Add general packages
 `apt install debconf-utils mysql-server`  
 and take note of mySQL password if auth isn't made with PAM  
 `apt install php-fpm php-cli php-mysql`  
 `apt install git fail2ban letsencrypt`
 
-Install apache2
+4. Install webserver
+*apache2*  
 `apt install apache2 apache2-suexec-custom`  
 `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`  
 `service apache2 restart`  
-**OR**
-Install nginx  
+**OR**  
+*nginx*  
 `apt install nginx`
 
-Install mail packages if needed
+5. Install mail server if needed
 `apt install postfix postgrey postsrsd spamassassin spamc`  
 `groupadd spamd`  
 `useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd`  
 `mkdir /var/log/spamassassin`  
 `chown spamd:spamd /var/log/spamassassin`  
 `service spamassassin restart`  
-
-
