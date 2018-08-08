@@ -11,8 +11,8 @@ function read_args($arg){
 	}
 	elseif(
 		strpos($arg['act'],'backup')!==FALSE&&
-				$arg['name']!==FALSE&&strlen($arg['name'])>=3&&
-			(isset($arg['type'])&&strlen($arg['type'])>=3&&
+				$arg['name']!==FALSE&&strlen($arg['name'])>=2&&
+			(isset($arg['type'])&&strlen($arg['type'])>=2&&
 			(strpos($arg['type'],'user')!==FALSE|| 
 			strpos($arg['type'],'daily')!==FALSE|| 
 			strpos($arg['type'],'weekly')!==FALSE||
@@ -25,16 +25,16 @@ function read_args($arg){
 			}
 	}
 	elseif(strpos($arg['act'],'list')!==FALSE){
-		list_backups_nice((isset($arg['name'])&&strlen($arg['name'])>=3)?$arg['name']:"ALL");
+		list_backups_nice((isset($arg['name'])&&strlen($arg['name'])>=2)?$arg['name']:"ALL");
 	}
 	elseif(strpos($arg['act'],'rotate')!==FALSE){
-		if(backup_rotate((isset($arg['name'])&&strlen($arg['name'])>=3)?$arg['name']:"ALL")){
+		if(backup_rotate((isset($arg['name'])&&strlen($arg['name'])>=2)?$arg['name']:"ALL")){
 			echo "Rotate completed!\n";
 		}else{
 			echo "Rotate failed!\n";
 		}
 	}
-	elseif(strpos($arg['act'],'restore')!==FALSE&&strpos($arg['archive'],'.tar.gz')!==FALSE&&strlen($arg['name'])>=3){
+	elseif(strpos($arg['act'],'restore')!==FALSE&&strpos($arg['archive'],'.tar.gz')!==FALSE&&strlen($arg['name'])>=2){
 		if(!restore_from($arg['name'],$arg['archive'])){
 			echo "Restore failed!\n";
 		}else{

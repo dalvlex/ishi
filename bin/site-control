@@ -11,9 +11,9 @@ function read_args($arg){
 	elseif(
 		strpos($arg['act'],'add')!==FALSE&&
 		isset($arg['type'])&&(strpos($arg['type'],'build')!==FALSE||strpos($arg['type'],'live')!==FALSE)&&
-		@strlen($arg['name'])>=3&&
-		@strlen($arg['domain'])>=3&&
-		@strlen($arg['email'])>=3&&
+		@strlen($arg['name'])>=2&&
+		@strlen($arg['domain'])>=2&&
+		@strlen($arg['email'])>=2&&
 		(!isset($arg['backups'])|| strpos($arg['backups'],'on')!==FALSE|| strpos($arg['backups'],'off')!==FALSE)
 		){
 			if(strlen($arg['name'])>10){
@@ -28,7 +28,7 @@ function read_args($arg){
 	}
 	elseif(
 			strpos($arg['act'],'del')!==FALSE&&
-			isset($arg['name'])&&strlen($arg['name'])>=3&&
+			isset($arg['name'])&&strlen($arg['name'])>=2&&
 			(!isset($arg['backups'])|| strpos($arg['backups'],'keep')!==FALSE|| strpos($arg['backups'],'delete')!==FALSE)
 			){
 		if(site_del($arg['name'],(isset($arg['backups'])&&$arg['backups']=="delete")?1:0)){
