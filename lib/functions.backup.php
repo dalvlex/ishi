@@ -52,9 +52,9 @@ function backup_site($name="ALL",$type="ALL"){
 
 	$date=date("Ymd_His",time());
 
-	$keep=`mysqldump {$name} > /tmp/{$name}.sql; chown -R {$name}:{$name} /tmp/{$name}.sql`;
-	$keep=`tar czf {$settings['.backup_path']}{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp {$name}.sql`;
-	$keep=`rm -rf /tmp/{$name}.sql`;
+	$keep=`mysqldump {$name} > /tmp/database_dump.sql; chown -R {$name}:{$name} /tmp/database_dump.sql`;
+	$keep=`tar czf {$settings['.backup_path']}{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+	$keep=`rm -rf /tmp/database_dump.sql`;
 
 	if(is_file("{$settings['.backup_path']}{$name}-{$type}_{$date}.tar.gz")){
 		write_backups('add',$name,$type,$date);
@@ -203,8 +203,8 @@ function restore_from($name,$file){
 	//empty database and load new one
 	$keep.=`mysql --execute="DROP DATABASE IF EXISTS {$name};"`;
 	$keep.=`mysql --execute="CREATE DATABASE {$name};"`;
-	$keep.=`mysql -h localhost {$name} < /home/{$name}/{$name}.sql`;
-	$keep.=`rm -rf /home/{$name}/{$name}.sql`;
+	$keep.=`mysql -h localhost {$name} < /home/{$name}/database_dump.sql`;
+	$keep.=`rm -rf /home/{$name}/database_dump.sql`;
 
 	return TRUE;
 }
