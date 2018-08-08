@@ -299,7 +299,7 @@ function list_sites(){
 
 	$list=read_list($settings['.store_sites']);
 	ksort($list);
-	$a2ensites=$settings['.a2ensites'];
+	$a2ensites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-enabled/';
 
 	echo "Name\t\t\t\tBck\tActive\tDomain\n";
 	foreach($list as $lk => $lv){
