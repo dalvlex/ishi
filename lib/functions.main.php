@@ -152,7 +152,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 
 	//check if user exists
 	if(site_is_check($name)){
-		echo "bau";exit;
+		echo "It appears that this site already exists!\n";exit;
 		return FALSE;
 	}
 
@@ -223,7 +223,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 
 	if(strpos($email,'@')!==FALSE){
 	//get ssl certificate
-	$keep.=`/opt/letsencrypt/letsencrypt-auto certonly --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain}`;
+	$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
 	$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
 	$keep.=`service nginx restart`;
 	}
@@ -239,6 +239,9 @@ function site_del($name, $backups=0){
 	if(!site_is_check($name)){
 		return FALSE;
 	}
+
+	//get domain name
+	$domain = trim(`cat /etc/nginx/sites-enabled/{$name} |grep "fullchain.pem" |awk -F "/" '{print $5}'`);
 
 	//remove immutable flag
 	$keep=`find /home/{$name}/ -type f -exec chattr -i {} \;`;
@@ -272,6 +275,11 @@ function site_del($name, $backups=0){
 	//restart server
 	$keep.=`service php{$settings['.php']}-fpm restart`;
 	$keep.=`service nginx restart`;
+
+	//delete ssl
+	$keep.=`rm -rf /etc/letsencrypt/renewal/{$domain}.conf`;
+	$keep.=`rm -rf /etc/letsencrypt/live/{$domain}`;
+	$keep.=`rm -rf /etc/letsencrypt/archive/{$domain}`;
 
 	//delete backups if required
 	if($backups){

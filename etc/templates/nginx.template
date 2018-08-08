@@ -1,12 +1,12 @@
 server {
         listen 80; listen [::]:80; listen 443 ssl; listen [::]:443 ssl;
         server_name !DOMAIN! www.!DOMAIN!;
-#ssl#        ssl_certificate      /etc/letsencrypt/live/!USERNAME!/fullchain.pem;
-#ssl#        ssl_certificate_key  /etc/letsencrypt/live/!USERNAME!/privkey.pem;
+#ssl#        ssl_certificate      /etc/letsencrypt/live/!DOMAIN!/fullchain.pem;
+#ssl#        ssl_certificate_key  /etc/letsencrypt/live/!DOMAIN!/privkey.pem;
 
         location ^~ /.well-known/acme-challenge/ { allow all; default_type "text/plain"; }
 
-        if ( $host ~ ^www\.(.+)$ ) { return 301 https://$1$request_uri; }
+        if ( $host ~ ^www\.(.+)$ ) { return 301 http://$1$request_uri; }
 #ssl#        if ( $scheme = http ) { return 301 https://$server_name$request_uri; }
 
         root /home/!USERNAME!/www;

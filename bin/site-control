@@ -11,8 +11,9 @@ function read_args($arg){
 	elseif(
 		strpos($arg['act'],'add')!==FALSE&&
 		isset($arg['type'])&&(strpos($arg['type'],'build')!==FALSE||strpos($arg['type'],'live')!==FALSE)&&
-		strlen($arg['name'])>=3&&
-		strlen($arg['domain'])>=3&&
+		@strlen($arg['name'])>=3&&
+		@strlen($arg['domain'])>=3&&
+		@strlen($arg['email'])>=3&&
 		(!isset($arg['backups'])|| strpos($arg['backups'],'on')!==FALSE|| strpos($arg['backups'],'off')!==FALSE)
 		){
 			if(strlen($arg['name'])>10){
@@ -45,7 +46,7 @@ function read_args($arg){
 }
 
 function show_help($name){
-	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> [email=<enable-ssl@a-domain.com>] [backups=<on/off> (default on)]\n";
+	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> email=<ssl-email@a-domain.com> [backups=<on/off> (default on)]\n";
 	echo " Del site:\n   {$name} act=del name=<name> [backups=<keep/delete> (default keep)]\n";
 	echo " List sites:\n   {$name} act=list\n";
 }
