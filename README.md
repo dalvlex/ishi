@@ -15,9 +15,10 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 `echo "access_key:secret" > /etc/passwd-s3fs; chmod 600 /etc/passwd-s3fs`  
 7. Insert in /etc/fstab  
 `ishi-backups-bucket /root/ishi/var/backups fuse.s3fs _netdev,retries=5,url=https://s3-eu-central-1.amazonaws.com 0 0`  
-Be sure to change *eu-central-1 to whatever you Amazon S3 zone is, because s3fs loses proper auth between redirects and it will not work otherwise.  
+Be sure to change *eu-central-1* to whatever you Amazon S3 zone is, because s3fs loses proper auth between redirects and it will not work otherwise.  
 8. Mount the bucket  
 `mount /root/ishi/var/backups`  
+The mount will be available after reboots.
 
 If you want to just mount it manually without adding it to /etc/fstab  
 `s3fs ishi-backups-bucket /root/ishi/var/backups -o url="https://s3-eu-central-1.amazonaws.com"`  
