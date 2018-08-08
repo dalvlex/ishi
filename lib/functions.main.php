@@ -1,5 +1,7 @@
 <?php
-$f_settings='/root/ishi/.settings';
+$pwd = realpath( dirname( __FILE__ ) ).'/..';
+$f_settings=$pwd.'/etc/settings';
+
 
 function arg_array($args){
 	$ret=array('script_name'=>$args[0]);
@@ -48,8 +50,8 @@ function read_list($file){
 
 function write_sites($action,$val){
 	global $f_settings;
-	
 	$settings=read_settings($f_settings);
+
 	$list=read_list($settings['.store_sites']);
 
 	if($action=="add"){
@@ -61,7 +63,7 @@ function write_sites($action,$val){
 	elseif($action=="del"){
 		unset($list[$val]);
 	}
-	
+
 	$file='';
 	foreach($list as $ak => $av){
 		$file.="{$ak}:{$list[$ak]['domain']}:{$list[$ak]['u_ssh']}:{$list[$ak]['p_ssh']}:{$list[$ak]['u_mysql']}:{$list[$ak]['p_mysql']}:{$list[$ak]['backups']}\n";
@@ -143,6 +145,9 @@ function site_is_check($name){
 }
 
 function site_add($type,$name,$domain,$email=NULL,$backups=1){
+	global $pwd, $f_settings;
+	$settings=read_settings($f_settings);
+
 	$name=$type.'_'.str_replace('.', '_', $name);
 
 	//check if user exists
@@ -182,21 +187,21 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	set_ssh_key($name);
 
 	//add php-fpm pool
-	$pwd=dirname(__FILE__);
-	$keep.=`cp {$pwd}/.templates/_template_phpfpm /etc/php/7.0/fpm/pool.d/{$name}.conf`;
-	$keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/php/7.0/fpm/pool.d/{$name}.conf`;
-	$keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/php/7.0/fpm/pool.d/{$name}.conf`;
+	$keep.=`cp {$pwd}/etc/templates/phpfpm.template /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
+	$keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
+	$keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
 
 	//add nginx
-    $keep.=`cp {$pwd}/.templates/_template_nginx /etc/nginx/sites-available/{$name}`;
+    $keep.=`cp {$pwd}/etc/templates/nginx.template /etc/nginx/sites-available/{$name}`;
     $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/nginx/sites-available/{$name}`;
     $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/nginx/sites-available/{$name}`;
     $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/nginx/sites-available/{$name}`;
-    $keep.=`touch /etc/nginx/sites-lock/{$name}`;
+    $keep.=`mkdir -p /etc/nginx/sites-locked`;
+    $keep.=`touch /etc/nginx/sites-locked/{$name}`;
 
     //create locking template
-    $keep.=`cp {$pwd}/.templates/_template_lock_conf /root/ishi/lock-conf/{$name}.conf`;
-    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /root/ishi/lock-conf/{$name}.conf`;
+    $keep.=`cp {$pwd}/etc/templates/site-lock.template {$pwd}/etc/sites-locked/{$name}.conf`;
+    $keep.=`sed -i 's/!USERNAME!/{$name}/g' {$pwd}/etc/sites-locked/{$name}.conf`;
 
 	//set privileges
 	$keep.=`chown -R {$name}:{$name} /home/{$name}`;
@@ -213,8 +218,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	$keep.=`ln -s /etc/nginx/sites-available/{$name} /etc/nginx/sites-enabled/{$name}`;
 
 	//restart servers
-	//$keep.=`service php7.0-fpm restart`;
-	$keep.=`service php5.6-fpm restart`;
+	$keep.=`service php{$settings['.php']}-fpm restart`;
 	$keep.=`service nginx restart`;
 
 	if(strpos($email,'@')!==FALSE){
@@ -228,6 +232,9 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 }
 
 function site_del($name, $backups=0){
+	global $pwd, $f_settings;
+	$settings=read_settings($f_settings);
+
 	//check if exists
 	if(!site_is_check($name)){
 		return FALSE;
@@ -253,17 +260,17 @@ function site_del($name, $backups=0){
 	//delete nginx site
 	$keep.=`rm -rf /etc/nginx/sites-available/{$name}`;
 	$keep.=`rm -rf /etc/nginx/sites-enabled/{$name}`;
-	$keep.=`rm -rf /etc/nginx/sites-lock/{$name}`;
+	$keep.=`rm -rf /etc/nginx/sites-locked/{$name}`;
 
-	$keep.=`rm -rf /etc/php/7.0/fpm/pool.d/{$name}.conf`;
-	$keep.=`rm -rf /root/ishi/lock-conf/{$name}.conf`;
+	$keep.=`rm -rf /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
+	$keep.=`rm -rf {$pwd}/etc/sites-locked/{$name}.conf`;
 
 	//delete logs
 	$keep.=`rm -rf /var/log/nginx/access-{$name}.*`;
 	$keep.=`rm -rf /var/log/nginx/error-{$name}.*`;
 
 	//restart server
-	$keep.=`service php5.6-fpm restart`;
+	$keep.=`service php{$settings['.php']}-fpm restart`;
 	$keep.=`service nginx restart`;
 
 	//delete backups if required
@@ -280,10 +287,8 @@ function site_del($name, $backups=0){
 
 function list_sites(){
 	global $f_settings;
-
-	
-
 	$settings=read_settings($f_settings);
+
 	$list=read_list($settings['.store_sites']);
 	ksort($list);
 	$a2ensites=$settings['.a2ensites'];
