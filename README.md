@@ -2,10 +2,12 @@
 Ishi site management
 
 ### Install ishi
-1. git clone https://github.com/dalvlex/ishi /root/ishi
+`git clone https://github.com/dalvlex/ishi /root/ishi`  
+Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!
 
 ### Amazon S3 backup storage
-1. Install **s3fs** from [](https://github.com/s3fs-fuse/s3fs-fuse)  
+1. Install **s3fs**  
+`apt install s3fs`  
 2. Create a new bucket *ishi-backups-bucket* on Amazon S3  
 3. Add a new user *ishi-backups-user* through Amazon IAM with programatic access  
 4. Create and attach a policy *ishi-backups-policy* to the above user *ishi-backups-user* with list, read, write permissions only to the above bucket *ishi-backups-bucket*, and take note of the user's access_key and secret.  
