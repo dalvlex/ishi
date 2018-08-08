@@ -53,10 +53,10 @@ function backup_site($name="ALL",$type="ALL"){
 	$date=date("Ymd_His",time());
 
 	$keep=`mysqldump {$name} > /tmp/database_dump.sql; chown -R {$name}:{$name} /tmp/database_dump.sql`;
-	$keep=`tar czf {$settings['.backup_path']}{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+	$keep=`tar czf {$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
 	$keep=`rm -rf /tmp/database_dump.sql`;
 
-	if(is_file("{$settings['.backup_path']}{$name}-{$type}_{$date}.tar.gz")){
+	if(is_file("{$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz")){
 		write_backups('add',$name,$type,$date);
 
 		return TRUE;
@@ -141,7 +141,7 @@ function backup_rotate($site="ALL"){
 			if(isset($list[$site][$ck])&&is_array($list[$site][$ck])){
 				while(count($list[$site][$ck])>$cv){
 					$key=min(array_keys($list[$site][$ck]));
-					$keep=`rm -rf {$settings['.backup_path']}{$list[$site][$ck][$key]}`;
+					$keep=`rm -rf {$settings['.backup_path']}/{$list[$site][$ck][$key]}`;
 					write_backups('del',$site,$ck,$key);
 					unset($list[$site][$ck][$key]);
 				}
@@ -188,12 +188,12 @@ function restore_from($name,$file){
 	}
 
 	//delete current www and extact new one
-	if(file_exists("{$settings['.backup_path']}{$file}")&&is_file("{$settings['.backup_path']}{$file}")){
+	if(file_exists("{$settings['.backup_path']}/{$file}")&&is_file("{$settings['.backup_path']}/{$file}")){
 		$keep=`rm -rf /home/{$name}/www`;
 	}else{
 		return FALSE;
 	}
-	$keep.=`tar xzf {$settings['.backup_path']}{$file} -C /home/{$name}/`;
+	$keep.=`tar xzf {$settings['.backup_path']}/{$file} -C /home/{$name}/`;
 
 	//empty database and load new one
 	$keep.=`mysql --execute="DROP DATABASE IF EXISTS {$name};"`;

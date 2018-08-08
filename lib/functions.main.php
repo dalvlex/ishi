@@ -26,6 +26,9 @@ function read_settings($file){
 	foreach($file as $fv){
 		if (strpos($fv, '.')===0&&strpos($fv, '=')!==FALSE){
 			$fv=explode('=',$fv);
+			if(strpos($fv[1],'/')===0){
+				$fv[1] = rtrim($fv[1], '/');
+			}
 			$settings[$fv[0]]=$fv[1];
 		}
 	}
@@ -317,10 +320,9 @@ function delete_site_backup($name){
 	global $f_settings;
 	$settings=read_settings($f_settings);
 
-	$b_path=$settings['.backup_path'];
-	$keep=`rm -rf {$b_path}{$name}-daily_*`;
-	$keep.=`rm -rf {$b_path}{$name}-user_*`;
-	$keep.=`rm -rf {$b_path}{$name}-weekly_*`;
+	$keep=`rm -rf {$$settings['.backup_path']}/{$name}-daily_*`;
+	$keep.=`rm -rf {$$settings['.backup_path']}/{$name}-user_*`;
+	$keep.=`rm -rf {$$settings['.backup_path']}/{$name}-weekly_*`;
 
 	//replace backup store
 	$b_store=$settings['.store_backups'];
