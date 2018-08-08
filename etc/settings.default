@@ -1,3 +1,5 @@
+Rename this file to 'settings' and erase this line!
+
 # variable format .varname=varcontent
 
 # web daemon: either nginx or apache2
