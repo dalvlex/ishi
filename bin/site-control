@@ -21,7 +21,7 @@ function read_args($arg){
 				exit;
 			}
 			if(site_add($arg['type'],$arg['name'],$arg['domain'],((isset($arg['email']))?$arg['email']:NULL),(isset($arg['backups'])&&$arg['backups']=="off")?0:1)){
-				echo "Site added!\n";
+				echo "Site added! ".(isset($arg['backups'])&&$arg['backups']=="off"?"Backups OFF!":"Backups ON!")."\n";
 			}else{
 				echo "Add failed!\n";
 			}
@@ -32,7 +32,7 @@ function read_args($arg){
 			(!isset($arg['backups'])|| strpos($arg['backups'],'keep')!==FALSE|| strpos($arg['backups'],'delete')!==FALSE)
 			){
 		if(site_del($arg['name'],(isset($arg['backups'])&&$arg['backups']=="delete")?1:0)){
-			echo "Site deleted!\n";
+			echo "Site deleted! ".(isset($arg['backups'])&&$arg['backups']=="delete"?"Backups deleted!":"Backups kept!")."\n";
 		}else{
 			echo "Delete failed!\n";
 		}

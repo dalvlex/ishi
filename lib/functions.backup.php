@@ -181,14 +181,9 @@ function restore_from($name,$file){
 	global $f_settings;
 	$settings=read_settings($f_settings);
 
-	$list=list_backups($name);
-	
-	if(isset($list[$name])&&is_array($list[$name])){
-		$isit=`grep -c '{$file}' {$settings['.store_backups']}`;
-		if(!$isit){
-			return FALSE;
-		}
-	}else{
+	//check if we have a backup with that file name
+	$isit=`grep -c '{$file}' {$settings['.store_backups']}`;
+	if(!$isit){
 		return FALSE;
 	}
 
