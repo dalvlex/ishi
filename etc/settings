@@ -18,3 +18,4 @@
 
 # path to backup storage folder
 .backup_path=/root/ishi/var/backups
+
