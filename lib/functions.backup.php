@@ -66,21 +66,32 @@ function backup_site($name="ALL",$type="ALL"){
 }
 
 function list_backups($name="ALL"){
-	global $f_settings;
+	global $f_settings, $pwd;
 	$settings=read_settings($f_settings);
-	$file=$settings['.store_backups'];
+	$path=$settings['.backup_path'];
 
 	$list=array();
 
-	$file=file_get_contents($file);
-	$file=explode("\n",$file);
+	$file = `ls -lah {$path} |grep '.tar.gz' |awk '{print \$NF}'`;
+	$file = explode("\n", $file);
 
 	foreach($file as $fv){
+		if(strpos($fv,'.tar.gz')!==FALSE){
+			$user = @reset(explode('-', $fv));
+			$type = @reset(explode('_',end(explode('-', $fv))));
+			$date = explode('_', $fv);
+			$date = str_replace('.tar.gz', '', $date[2].'_'.$date[3]);
+
+			$list[$user][$type][$date] = $fv;
+		}
+	}
+
+/*	foreach($file as $fv){
 		if(strpos($fv,':')!==FALSE){
 			$fv=explode(':',$fv);
 			$list[$fv[0]][$fv[1]][$fv[2]]=$fv[3];
 		}
-	}
+	}*/
 	if($name!="ALL"&&isset($list[$name])){
 		return array($name=>$list[$name]);
 	}
