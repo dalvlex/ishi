@@ -354,16 +354,18 @@ function list_sites(){
 	$list=read_list($settings['.store_sites']);
 	ksort($list);
 	$a2ensites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-enabled/';
+	$a2ensites_conf=($settings['.web'] == 'nginx'?'':'.conf');
 
-	echo "Name\t\t\t\tBck\tActive\tDomain\n";
+	echo "Name\t\t\t\tBackup\tActive\tDomain\n";
 	foreach($list as $lk => $lv){
 		$t=4-floor(strlen($lk)/8);
 		$tt='';
 		for($i=0;$i<$t;$i++){
 			$tt.="\t";
 		}
+
 		echo "-----------------------------------------------------------------------------------\n";
-		echo "{$lk}{$tt}{$lv['backups']}\t".((is_file($a2ensites.$lk)&&file_exists($a2ensites.$lk))?"1":"0")."\t{$lv['domain']}\n";
+		echo "{$lk}{$tt}{$lv['backups']}\t".(is_file($a2ensites.$lk.$a2ensites_conf)?"1":"0")."\t{$lv['domain']}\n";
 	}
 }
 
