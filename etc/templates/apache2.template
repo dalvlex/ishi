@@ -4,9 +4,10 @@
 	ServerAlias www.!DOMAIN!
 	SuexecUserGroup !USERNAME! !USERNAME!
 
-	<FilesMatch \.php$>
-		SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
-	</FilesMatch>
+#ssl#        RewriteEngine On
+#ssl#        RewriteCond %{HTTPS} off
+#ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
+#ssl#        RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L]
 
 	<Directory "/home/!USERNAME!/www">
 		Include /etc/apache2/sites-locked/!USERNAME!
@@ -31,6 +32,11 @@
 #ssl#        ServerName !DOMAIN!
 #ssl#        ServerAlias www.!DOMAIN!
 #ssl#        SuexecUserGroup !USERNAME! !USERNAME!
+
+#ssl#        RewriteEngine On
+#ssl#        RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+#ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
+#ssl#        RewriteRule ^(.*)$ https://%1$1 [R=301,L]
 
 #ssl#        <FilesMatch \.php$>
 #ssl#                SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
