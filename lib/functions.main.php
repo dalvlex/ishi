@@ -207,17 +207,32 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	    $keep.=`touch /etc/nginx/sites-locked/{$name}`;
 	}
 	else{
-	    $keep.=`cp {$pwd}/etc/templates/apache2.template /etc/apache2/sites-available/{$name}`;
-	    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/apache2/sites-available/{$name}`;
-	    $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/apache2/sites-available/{$name}`;
-	    $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/apache2/sites-available/{$name}`;
+	    $keep.=`cp {$pwd}/etc/templates/apache2.template /etc/apache2/sites-available/{$name}.conf`;
+	    $keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/apache2/sites-available/{$name}.conf`;
+	    $keep.=`sed -i 's/!DOMAIN!/{$domain}/g' /etc/apache2/sites-available/{$name}.conf`;
+	    $keep.=`sed -i 's/!PORT!/{$uid}/g' /etc/apache2/sites-available/{$name}.conf`;
 	    $keep.=`mkdir -p /etc/apache2/sites-locked`;
 	    $keep.=`touch /etc/apache2/sites-locked/{$name}`;
+	    $keep.=`touch /etc/apache2/sites-locked/{$name}_passwd`;
 	}
 
     //create locking template
     $keep.=`cp {$pwd}/etc/templates/site-lock.template {$pwd}/etc/sites-locked/{$name}.conf`;
     $keep.=`sed -i 's/!USERNAME!/{$name}/g' {$pwd}/etc/sites-locked/{$name}.conf`;
+
+    //create password template
+    if($settings['.web'] == 'nginx'){
+    	$passwd = 'auth_basic "Restricted Content";
+        auth_basic_user_file /etc/nginx/.htpasswd;';
+        file_put_contents("/etc/nginx/sites-locked/{$name}_passwd", $passwd);
+    }
+    else{
+    	$passwd = 'AuthType Basic
+        AuthName "Restricted Content"
+        AuthUserFile /etc/apache2/.htpasswd
+        Require valid-user';
+    	file_put_contents("/etc/apache2/sites-locked/{$name}_passwd", $passwd);
+    }
 
 	//set privileges
 	$keep.=`chown -R {$name}:{$name} /home/{$name}`;
@@ -235,7 +250,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 		$keep.=`ln -s /etc/nginx/sites-available/{$name} /etc/nginx/sites-enabled/{$name}`;
 	}
 	else{
-		$keep.=`ln -s /etc/apache2/sites-available/{$name} /etc/apache2/sites-enabled/{$name}.conf`;
+		$keep.=`ln -s /etc/apache2/sites-available/{$name}.conf /etc/apache2/sites-enabled/{$name}.conf`;
 	}
 
 	//restart php server
@@ -259,7 +274,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 			$keep.=`service nginx restart`;
 		}
 		else{
-			$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}`;
+			$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}.conf`;
 			$keep.=`service apache2 restart`;
 		}
 	}
@@ -301,11 +316,13 @@ function site_del($name, $backups=0){
 		$keep.=`rm -rf /etc/nginx/sites-available/{$name}`;
 		$keep.=`rm -rf /etc/nginx/sites-enabled/{$name}`;
 		$keep.=`rm -rf /etc/nginx/sites-locked/{$name}`;
+		$keep.=`rm -rf /etc/nginx/sites-locked/{$name}_passwd`;
 	}
 	else{
-		$keep.=`rm -rf /etc/apache2/sites-available/{$name}`;
+		$keep.=`rm -rf /etc/apache2/sites-available/{$name}.conf`;
 		$keep.=`rm -rf /etc/apache2/sites-enabled/{$name}.conf`;
 		$keep.=`rm -rf /etc/apache2/sites-locked/{$name}`;
+		$keep.=`rm -rf /etc/apache2/sites-locked/{$name}_passwd`;
 	}
 
 	//delete php site & locking config

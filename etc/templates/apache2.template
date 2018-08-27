@@ -12,6 +12,7 @@
 	Include /etc/apache2/sites-locked/!USERNAME!
 
 	<Directory "/home/!USERNAME!/www">
+		Include /etc/apache2/sites-locked/!USERNAME!_passwd
 		AllowOverride FileInfo Limit
 		Options -Indexes +ExecCGI
 		Order deny,allow
@@ -46,6 +47,7 @@
 #ssl#        </FilesMatch>
 
 #ssl#        <Directory "/home/!USERNAME!/www">
+#ssl#				 Include /etc/apache2/sites-locked/!USERNAME!_passwd
 #ssl#                AllowOverride FileInfo Limit
 #ssl#                Options -Indexes +ExecCGI
 #ssl#                Order deny,allow

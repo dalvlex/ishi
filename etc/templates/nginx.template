@@ -12,11 +12,12 @@ server {
         root /home/!USERNAME!/www;
         index index.php index.html index.htm;
 
+        include /etc/nginx/sites-locked/!USERNAME!;
+
         location / {
             try_files $uri $uri/ /index.php?$args;
+            include /etc/nginx/sites-locked/!USERNAME!_passwd;
         }
-
-        include /etc/nginx/sites-locked/!USERNAME!;
 
         location ~ \.php$ {
             try_files $uri =404;
