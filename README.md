@@ -40,8 +40,7 @@ and take note of mySQL password if auth isn't made with PAM
 `apt install php-fpm php-cli php-mysql`  
 `apt install git fail2ban letsencrypt`
 
-4. Configure webserver
-*Install apache2*  
+4. Configure webserver - *Install apache2*  
 `apt install apache2 apache2-suexec-custom`  
 `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
 
@@ -57,9 +56,7 @@ echo '<Directory />
 `htpasswd -c /etc/apache2/.htpasswd username_here`  
 `service apache2 restart`  
   
-**OR**  
-  
-*Install nginx*  
+5. **OR**  Configure webserver - *Install nginx*  
 `apt install nginx`  
   
 *Disable default page*  
@@ -69,7 +66,7 @@ echo '<Directory />
 `htpasswd -c /etc/nginx/.htpasswd username_here`  
 `service nginx restart`  
 
-5. Install mail server if needed
+6. Install mail server if needed
 `apt install postfix postgrey postsrsd spamassassin spamc`  
 `groupadd spamd`  
 `useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd`  
