@@ -38,7 +38,7 @@ Use `-o dbglevel=info -f -o curldbg` for debugging.
 `apt install debconf-utils mysql-server apache2-utils`  
 and take note of mySQL password if auth isn't made with PAM  
 `apt install php-fpm php-cli php-mysql`  
-`apt install git fail2ban letsencrypt`
+`apt install git sqlite3 fail2ban letsencrypt`
 
 4. Configure webserver
   * *Install apache2*  
