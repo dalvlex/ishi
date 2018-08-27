@@ -44,10 +44,19 @@ and take note of mySQL password if auth isn't made with PAM
 *apache2*  
 `apt install apache2 apache2-suexec-custom`  
 `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`  
+
+Configure password for unlocked sites
+`htpasswd -c /etc/apache2/.htpasswd username_here`  
 `service apache2 restart`  
+
 **OR**  
+
 *nginx*  
 `apt install nginx`
+
+Configure password for unlocked sites
+`htpasswd -c /etc/nginx/.htpasswd username_here`
+`service nginx restart`  
 
 5. Install mail server if needed
 `apt install postfix postgrey postsrsd spamassassin spamc`  
