@@ -78,11 +78,11 @@ and take note of mySQL password if auth isn't made with PAM
 6. Install crontab
 ```
 # Backup all sites
-0 5 * * * cd /root/ishi; ./backup-control act=backup name=ALL type=daily > /dev/null 2>&1
-0 7 6 * * cd /root/ishi; ./backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
+0 5 * * * /root/ishi/bin/backup-control act=backup name=ALL type=daily > /dev/null 2>&1
+0 7 6 * * /root/ishi/bin/backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
 
 # Rotate the backups according to etc/settings
-45 * * * * cd /root/ishi; ./backup-control act=rotate > /dev/null 2>&1
+45 * * * * /root/ishi/bin/backup-control act=rotate > /dev/null 2>&1
 
 # Renew LetsEncrypt certificates weekly
 @weekly /opt/letsencrypt/letsencrypt-auto renew && /usr/sbin/service nginx reload > /dev/null 2>&1
