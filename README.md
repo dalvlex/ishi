@@ -76,8 +76,7 @@ and take note of mySQL password if auth isn't made with PAM
 `service spamassassin restart`  
 
 6. Install crontab
-```# m h  dom mon dow   command
-
+```
 # Backup all sites
 0 5 * * * cd /root/ishi; ./backup-control act=backup name=ALL type=daily > /dev/null 2>&1
 0 7 6 * * cd /root/ishi; ./backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
