@@ -43,8 +43,8 @@ and take note of mySQL password if auth isn't made with PAM
 4. Configure webserver
 *Install apache2*  
 `apt install apache2 apache2-suexec-custom`  
-`a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`  
-  
+`a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
+
 *Disable default page*  
 echo '<Directory />  
     Order Deny,Allow  
