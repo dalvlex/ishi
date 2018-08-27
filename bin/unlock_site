@@ -1,7 +1,13 @@
 #!/usr/bin/php
 <?php
-$conf_folder='/root/ishi/lock-conf/';
-$phpdeny_folder='/etc/nginx/sites-lock/';
+require_once( realpath( dirname( __FILE__ ) ) . '/../lib/functions.main.php' );
+
+$settings = read_settings($f_settings);
+$conf_folder = $settings['.lock_sites'];
+$web_server = $settings['.web'];
+$suffix = strcmp($web_server, 'nginx') === 0 ? '' : '.conf';
+$phpdeny_folder='/etc/'.$web_server.'/sites-locked/';
+
 $config=array();
 if(empty($argv[1])){
 	echo "ERROR: No argument supplied!\n";
@@ -10,13 +16,13 @@ if(empty($argv[1])){
 else{
 $name = $argv[1];
 }
-if(is_file($conf_folder.$name.".conf")===FALSE){
+if(is_file($conf_folder.'/'.$name.$suffix)===FALSE){
 	echo "ERROR: Configuration does not exist for {$name}\n";
 	exit;
 }
 
 echo "Reading config.\n";
-$file=file_get_contents($conf_folder.$name.".conf");
+$file=file_get_contents($conf_folder.'/'.$name.$suffix);
 if(strpos($file,'=')===FALSE){
 	echo "ERROR: No usable data in config file.\n";
 	exit;
@@ -35,30 +41,30 @@ if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config[
 echo "Unlocking site {$name}:\n";
 
 foreach($config['lock_dirfile'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Remove immutable flag for DIR {$cv}\n";
-        `chattr -i $cv`;
-        `find $cv -type f -exec chattr -i {} +`;
+    $cv=rtrim($cv,"/");
+    echo "- Remove immutable flag for DIR {$cv}\n";
+    `chattr -i $cv`;
+    `find $cv -type f -exec chattr -i {} +`;
 }
 foreach($config['lock_dirfile'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Set relaxed permissions for DIR {$cv}\n";
+    $cv=rtrim($cv,"/");
+    echo "- Set relaxed permissions for DIR {$cv}\n";
 	`find $cv -type d -exec chmod 755 {} +`;
 	`find $cv -type f -exec chmod 644 {} +`;
 }
 foreach($config['lock_ownerread'] as $cv){
-        echo "- Set relaxed permissions for FILE {$cv}\n";
+    echo "- Set relaxed permissions for FILE {$cv}\n";
 	`chmod 600 $cv`;
 }
 foreach($config['lock_dirfile'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Change ownership to rightful owner for DIR {$cv}\n";
+    $cv=rtrim($cv,"/");
+    echo "- Change ownership to rightful owner for DIR {$cv}\n";
 	`chown -R $name:$name $cv`;
 }
 
 echo "- Allow PHP execution in all folders under {$name}\n";
 file_put_contents($phpdeny_folder.$name,"");
 
-echo "END - Nginx Reload\n";
-`service nginx reload`;
+echo "END - {$web_server} Reload\n";
+`service {$web_server} reload`;
 ?>

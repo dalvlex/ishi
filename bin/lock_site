@@ -1,7 +1,13 @@
 #!/usr/bin/php
 <?php
-$conf_folder='/root/ishi/lock-conf/';
-$phpdeny_folder='/etc/nginx/sites-lock/';
+require_once( realpath( dirname( __FILE__ ) ) . '/../lib/functions.main.php' );
+
+$settings = read_settings($f_settings);
+$conf_folder = $settings['.lock_sites'];
+$web_server = $settings['.web'];
+$suffix = strcmp($web_server, 'nginx') === 0 ? '' : '.conf';
+$phpdeny_folder='/etc/'.$web_server.'/sites-locked/';
+
 $config=array();
 if(empty($argv[1])){
 	echo "ERROR: No argument supplied!\n";
@@ -10,13 +16,13 @@ if(empty($argv[1])){
 else{
 $name = $argv[1];
 }
-if(is_file($conf_folder.$name.".conf")===FALSE){
+if(is_file($conf_folder.'/'.$name.$suffix)===FALSE){
 	echo "ERROR: Configuration does not exist for {$name}\n";
 	exit;
 }
 
 echo "Reading config.\n";
-$file=file_get_contents($conf_folder.$name.".conf");
+$file=file_get_contents($conf_folder.'/'.$name.$suffix);
 if(strpos($file,'=')===FALSE){
 	echo "ERROR: No usable data in config file.\n";
 	exit;
@@ -43,46 +49,59 @@ foreach($config['lock_dirfile'] as $cv){
 	`find $cv -type d -exec chmod 555 {} +`;
 }
 foreach($config['lock_fileedit'] as $cv){
-        $cv=rtrim($cv,"/")."/";
-        echo "- Lock file editing for DIR {$cv}\n";
-        `find $cv -type f -exec chmod 444 {} +`;
+    $cv=rtrim($cv,"/")."/";
+    echo "- Lock file editing for DIR {$cv}\n";
+    `find $cv -type f -exec chmod 444 {} +`;
 }
 foreach($config['lock_ownerread'] as $cv){
-        echo "- Allow read only for owner for FILE {$cv}\n";
-        `chmod 400 $cv`;
+    echo "- Allow read only for owner for FILE {$cv}\n";
+    `chmod 400 $cv`;
 }
 foreach($config['allowwrite_denyphp'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Allow write for DIR {$cv}\n";
-        `find $cv -type d -exec chmod 755 {} +`;
+    $cv=rtrim($cv,"/");
+    echo "- Allow write for DIR {$cv}\n";
+    `chmod 755 $cv`;
+    `find $cv -type d -exec chmod 755 {} +`;
 	`find $cv -type f -exec chmod 644 {} +`;
 }
 foreach($config['lock_dirfile'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Make all files immutable for DIR {$cv}\n";
-        `chattr +i $cv`;
-        `find $cv -type f -exec chattr +i {} +`;
+    $cv=rtrim($cv,"/");
+    echo "- Make all files immutable for DIR {$cv}\n";
+    `chattr +i $cv`;
+    `find $cv -type f -exec chattr +i {} +`;
 }
 foreach($config['allowwrite_denyphp'] as $cv){
-        $cv=rtrim($cv,"/");
-        echo "- Remove immutable flag for DIR {$cv}\n";
-        `chattr -i $cv`;
-        `find $cv -type f -exec chattr -i {} +`;
+    $cv=rtrim($cv,"/");
+    echo "- Remove immutable flag for DIR {$cv}\n";
+    `chattr -i $cv`;
+    `find $cv -type f -exec chattr -i {} +`;
 }
+
 $phpd="";
 foreach($config['allowwrite_denyphp'] as $cv){
-        $cv=trim(str_replace('/home/'.$name.'/www/', '', $cv),"/");
-        echo "- Deny PHP execution in DIR {$cv}\n";
-		$phpd.=$cv.'|';
+    //$cv=trim(str_replace('/home/'.$name.'/www/', '', $cv),"/");
+    $cv=trim($cv);
+    echo "- Deny PHP execution in DIR {$cv}\n";
+	$phpd.=$cv.'|';
 }
 $phpd=trim($phpd,"|");
-$phpd='location ~* /('.$phpd.')/.*\.php$ {
-	return 403;
+
+if(strcmp($web_server, 'nginx') === 0){
+	$phpd='location ~* /('.$phpd.')/.*\.php$ {
+		return 403;
+	}
+	';
+}else{
+	$phpd='<Directory "^('.$phpd.')">
+     <FilesMatch "(?i)\.(php|php3?|phtml)$">
+            Order Deny,Allow
+            Deny from All
+    </FilesMatch>
+ </Directory>';
 }
-';
 file_put_contents($phpdeny_folder.$name,$phpd);
 
-echo "END - Nginx Reload\n";
-`service nginx reload`;
+echo "END - {$web_server} Reload\n";
+`service {$web_server} reload`;
 
 ?>

@@ -9,8 +9,9 @@
 #ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
 #ssl#        RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L]
 
+	Include /etc/apache2/sites-locked/!USERNAME!
+
 	<Directory "/home/!USERNAME!/www">
-		Include /etc/apache2/sites-locked/!USERNAME!
 		AllowOverride FileInfo Limit
 		Options -Indexes +ExecCGI
 		Order deny,allow
@@ -38,12 +39,13 @@
 #ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
 #ssl#        RewriteRule ^(.*)$ https://%1$1 [R=301,L]
 
+#ssl#	     Include /etc/apache2/sites-locked/!USERNAME!
+
 #ssl#        <FilesMatch \.php$>
 #ssl#                SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
 #ssl#        </FilesMatch>
 
 #ssl#        <Directory "/home/!USERNAME!/www">
-#ssl#		     Include /etc/apache2/sites-locked/!USERNAME!
 #ssl#                AllowOverride FileInfo Limit
 #ssl#                Options -Indexes +ExecCGI
 #ssl#                Order deny,allow

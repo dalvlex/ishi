@@ -119,15 +119,18 @@ function set_ssh_key($name){
 	$settings=read_settings($f_settings);
 
 	if($name=="ALL"){
-		$sites=read_list('.store_sites');
+		$sites=read_list($settings['.store_sites']);
 		foreach($sites as $nk => $nv){
 			set_ssh_key($nk);
 		}
+		return;
 	}
 
 	$keep=`mkdir -p /home/{$name}/.ssh`;
+	$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`cp {$settings['.store_rsa']} /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`chmod 644 /home/{$name}/.ssh/authorized_keys`;
+	$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
 }
 
 function site_is_check($name){
@@ -376,11 +379,6 @@ function delete_site_backup($name){
 	$keep=`rm -rf {$settings['.backup_path']}/{$name}-daily_*`;
 	$keep.=`rm -rf {$settings['.backup_path']}/{$name}-user_*`;
 	$keep.=`rm -rf {$settings['.backup_path']}/{$name}-weekly_*`;
-
-	//replace backup store
-	$b_store=$settings['.store_backups'];
-	$b_store_c=`cat {$b_store} |grep -v ':{$name}-user_' |grep -v ':{$name}-daily_' |grep -v ':{$name}-weekly_'`;
-	file_put_contents($b_store, $b_store_c);
 }
 
 ?>
