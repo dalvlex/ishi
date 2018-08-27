@@ -42,30 +42,28 @@ and take note of mySQL password if auth isn't made with PAM
 
 4. Configure webserver
   * *Install apache2*  
-  `apt install apache2 apache2-suexec-custom`  
-  `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
-  
-  *Disable default page*  
-  echo '<Directory />  
+    `apt install apache2 apache2-suexec-custom`  
+    `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
+
+    *Disable default page*  
+    echo '<Directory />  
     Order Deny,Allow  
     Deny from all  
     Options None  
     AllowOverride None  
     </Directory>' |cat - /etc/apache2/apache2.conf > temp_file && mv temp_file /etc/apache2/apache2.conf
 
-  *Configure password for unlocked sites*  
-  `htpasswd -c /etc/apache2/.htpasswd username_here`  
-  `service apache2 restart`  
-  
-  * Configure webserver - *Install nginx*  
-  `apt install nginx`  
-  
-  *Disable default page*  
-  `rm -rf /etc/nginx/sites-enabled/default`  
-  
-  *Configure password for unlocked sites*  
-  `htpasswd -c /etc/nginx/.htpasswd username_here`  
-  `service nginx restart`  
+    *Configure password for unlocked sites*  
+    `htpasswd -c /etc/apache2/.htpasswd username_here`  
+    `service apache2 restart`
+
+  * *Install nginx*  
+    `apt install nginx`  
+    *Disable default page*  
+    `rm -rf /etc/nginx/sites-enabled/default`  
+    *Configure password for unlocked sites*  
+    `htpasswd -c /etc/nginx/.htpasswd username_here`  
+    `service nginx restart`
 
 5. Install mail server if needed
 `apt install postfix postgrey postsrsd spamassassin spamc`  
