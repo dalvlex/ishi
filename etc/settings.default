@@ -3,7 +3,7 @@ Rename this file to 'settings' and erase this line!
 # variable format .varname=varcontent
 
 # web daemon: either nginx or apache2
-.web=nginx
+.web=apache2
 
 # PHP supported version: 7.0, 7.1, 7.2
 .php=7.2
@@ -15,8 +15,9 @@ Rename this file to 'settings' and erase this line!
 
 # paths to configuration files
 .store_sites=/root/ishi/etc/sites
-.store_backups=/root/ishi/etc/backups
 .store_rsa=/root/ishi/etc/rsa
+.lock_sites=/root/ishi/etc/sites-locked
 
 # path to backup storage folder
 .backup_path=/root/ishi/var/backups
+
