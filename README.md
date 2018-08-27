@@ -40,22 +40,33 @@ and take note of mySQL password if auth isn't made with PAM
 `apt install php-fpm php-cli php-mysql`  
 `apt install git fail2ban letsencrypt`
 
-4. Install webserver
-*apache2*  
+4. Configure webserver
+*Install apache2*  
 `apt install apache2 apache2-suexec-custom`  
-`a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`  
+`a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
 
-Configure password for unlocked sites
+*Disable default page*  
+echo '<Directory />
+    Order Deny,Allow
+    Deny from all
+    Options None
+    AllowOverride None
+</Directory>' |cat - /etc/apache2/apache2.conf > temp_file && mv temp_file /etc/apache2/apache2.conf
+
+*Configure password for unlocked sites*  
 `htpasswd -c /etc/apache2/.htpasswd username_here`  
-`service apache2 restart`  
+`service apache2 restart`
 
 **OR**  
 
-*nginx*  
+*Install nginx*  
 `apt install nginx`
 
-Configure password for unlocked sites
-`htpasswd -c /etc/nginx/.htpasswd username_here`
+*Disable default page*  
+`rm -rf /etc/nginx/sites-enabled/default`
+
+*Configure password for unlocked sites*  
+`htpasswd -c /etc/nginx/.htpasswd username_here`  
 `service nginx restart`  
 
 5. Install mail server if needed
