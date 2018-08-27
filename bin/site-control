@@ -9,27 +9,28 @@ function read_args($arg){
 		show_help($arg['script_name']);
 	}
 	elseif(
-		strpos($arg['act'],'add')!==FALSE&&
-		isset($arg['type'])&&(strpos($arg['type'],'build')!==FALSE||strpos($arg['type'],'live')!==FALSE)&&
+		strcmp(trim($arg['act']),'add')===0&&
+		isset($arg['type'])&&(strcmp(trim($arg['type']),'build')===0||strcmp(trim($arg['type']),'live')===0)&&
 		@strlen($arg['name'])>=2&&
 		@strlen($arg['domain'])>=2&&
 		@strlen($arg['email'])>=2&&
-		(!isset($arg['backups'])|| strpos($arg['backups'],'on')!==FALSE|| strpos($arg['backups'],'off')!==FALSE)
+		@strlen($arg['ssh'])>=2&&
+		(!isset($arg['backups'])|| strcmp(trim($arg['backups']),'on')===0|| strcmp(trim($arg['backups']),'off')===0)
 		){
 			if(strlen($arg['name'])>10){
 				echo "Error: 'name' must have a maximum of 10 characters.\n";
 				exit;
 			}
-			if(site_add($arg['type'],$arg['name'],$arg['domain'],((isset($arg['email']))?$arg['email']:NULL),(isset($arg['backups'])&&$arg['backups']=="off")?0:1)){
+			if(site_add($arg['type'],$arg['name'],$arg['domain'],$arg['email'],(isset($arg['backups'])&&$arg['backups']=="off")?0:1,$arg['ssh'])){
 				echo "Site added! ".(isset($arg['backups'])&&$arg['backups']=="off"?"Backups OFF!":"Backups ON!")."\n";
 			}else{
 				echo "Add failed!\n";
 			}
 	}
 	elseif(
-			strpos($arg['act'],'del')!==FALSE&&
+			strcmp(trim($arg['act']),'del')===0&&
 			isset($arg['name'])&&strlen($arg['name'])>=2&&
-			(!isset($arg['backups'])|| strpos($arg['backups'],'keep')!==FALSE|| strpos($arg['backups'],'delete')!==FALSE)
+			(!isset($arg['backups'])|| strcmp(trim($arg['backups']),'keep')===0|| strcmp(trim($arg['backups']),'delete')===0)
 			){
 		if(site_del($arg['name'],(isset($arg['backups'])&&$arg['backups']=="delete")?1:0)){
 			echo "Site deleted! ".(isset($arg['backups'])&&$arg['backups']=="delete"?"Backups deleted!":"Backups kept!")."\n";
@@ -37,8 +38,16 @@ function read_args($arg){
 			echo "Delete failed!\n";
 		}
 	}
-	elseif(strpos($arg['act'],'list')!==FALSE){
+	elseif(strcmp(trim($arg['act']),'list')===0){
 		list_sites();
+	}
+	elseif(strcmp(trim($arg['act']),'listkeys')===0){
+		list_sshkeys();
+	}
+	elseif(strcmp(trim($arg['act']),'changekeys')===0&&
+	@strlen($arg['name'])>=2&&
+	@strlen($arg['ssh'])>=2){
+		set_ssh_key($arg['name'],$arg['ssh']);
 	}
 	else{
 		show_help($arg['script_name']);
@@ -46,9 +55,11 @@ function read_args($arg){
 }
 
 function show_help($name){
-	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> email=<ssl-email@a-domain.com> [backups=<on/off> (default on)]\n";
-	echo " Del site:\n   {$name} act=del name=<name> [backups=<keep/delete> (default keep)]\n";
+	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> email=<ssl-email@a-domain.com> ssh=<all|key1,key3,key4> [backups=<on/off> (default on)]\n";
+	echo " Del site:\n   {$name} act=del name=<site_name> [backups=<keep/delete> (default keep)]\n";
 	echo " List sites:\n   {$name} act=list\n";
+	echo " List SSH keys:\n   {$name} act=listkeys\n";
+	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|key1,key3,key4>\n";
 }
 
 

@@ -29,7 +29,12 @@ function read_settings($file){
 			if(strpos($fv[1],'/')===0){
 				$fv[1] = rtrim($fv[1], '/');
 			}
-			$settings[$fv[0]]=$fv[1];
+			if($fv[0] == '.ssh'){
+				$settings['.ssh'][$fv[1]]=$fv[2];
+			}
+			else{
+				$settings[$fv[0]]=$fv[1];
+			}
 		}
 	}
 	return $settings;
@@ -102,7 +107,7 @@ function generate_password($length = 9, $add_dashes = false, $available_sets = '
  
 	if(!$add_dashes)
 		return $password;
- 
+
 	$dash_len = floor(sqrt($length));
 	$dash_str = '';
 	while(strlen($password) > $dash_len)
@@ -114,22 +119,41 @@ function generate_password($length = 9, $add_dashes = false, $available_sets = '
 	return $dash_str;
 }
 
-function set_ssh_key($name){
+function set_ssh_key($name,$ssh){
 	global $f_settings;
 	$settings=read_settings($f_settings);
 
-	if($name=="ALL"){
+	$keys=$settings['.ssh'];
+	$authorized_keys = '';
+	if($ssh == 'all'){
+		foreach($keys as $fk => $fv)
+			$authorized_keys .= "{$settings['.ssh'][$fk]}\n";
+	}
+	else{
+		if(strpos($ssh, ',')){
+			$ssh=explode(',',$ssh);
+
+			foreach($ssh as $fv){
+				if(strlen($fv)>=2)
+					$authorized_keys .= "{$settings['.ssh'][$fv]}\n";
+			}
+		}else {
+			$authorized_keys .= "{$settings['.ssh'][$ssh]}\n";
+		}
+	}
+
+	if($name=="all"){
 		$sites=read_list($settings['.store_sites']);
 		foreach($sites as $nk => $nv){
-			set_ssh_key($nk);
+			set_ssh_key($nk,$ssh);
 		}
 		return;
 	}
 
 	$keep=`mkdir -p /home/{$name}/.ssh`;
-	$keep.=`touch /home/{$name}/.ssh/authorized_keys`;
+	$keep.=`touch /home/{$name}/.ssh/authorized_keys > /dev/null 2>&1`;
 	$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
-	$keep.=`cp {$settings['.store_rsa']} /home/{$name}/.ssh/authorized_keys`;
+	file_put_contents("/home/{$name}/.ssh/authorized_keys", $authorized_keys);
 	$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
 }
@@ -151,7 +175,7 @@ function site_is_check($name){
 	}
 }
 
-function site_add($type,$name,$domain,$email=NULL,$backups=1){
+function site_add($type,$name,$domain,$email,$backups=1,$ssh){
 	global $pwd, $f_settings;
 	$settings=read_settings($f_settings);
 
@@ -236,7 +260,7 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	$keep.=`chown -R {$name}:{$name} /home/{$name}`;
 
 	//set ssh key
-	set_ssh_key($name);
+	set_ssh_key($name,$ssh);
 
 	//add site to list
 	$new_site[$name]=array('domain'=>$domain,'u_ssh'=>$name,'p_ssh'=>'','u_mysql'=>$name,'p_mysql'=>$mysql_pass,'backups'=>$backups);
@@ -292,7 +316,8 @@ function site_del($name, $backups=0){
 	$domain = trim(`cat {$settings['.store_sites']} |grep {$name} |awk -F ":" '{print $2}'`);
 
 	//remove immutable flag
-	$keep=`find /home/{$name}/ -type f -exec chattr -i {} \;`;
+	$keep=`find /home/{$name} -type f -exec chattr -i {} \;`;
+	$keep=`find /home/{$name} -type d -exec chattr -i {} \;`;
 
 	//delete linux user & associated files
 	$keep=`/usr/sbin/userdel -f -r {$name} > /dev/null 2>&1`;
@@ -362,6 +387,18 @@ function site_del($name, $backups=0){
 	}
 
 	return TRUE;
+}
+
+function list_sshkeys(){
+	global $f_settings;
+	$settings=read_settings($f_settings);
+
+	$keys=$settings['.ssh'];
+	echo "SSH key name\n";
+	echo "-----------------------------------------------------------------------------------\n";
+	foreach($keys as $fk => $fv){
+		echo "- {$fk}\n";
+	}
 }
 
 function list_sites(){
