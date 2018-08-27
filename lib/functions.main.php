@@ -127,9 +127,10 @@ function set_ssh_key($name){
 	}
 
 	$keep=`mkdir -p /home/{$name}/.ssh`;
+	$keep.=`touch /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`cp {$settings['.store_rsa']} /home/{$name}/.ssh/authorized_keys`;
-	$keep.=`chmod 644 /home/{$name}/.ssh/authorized_keys`;
+	$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
 	$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
 }
 
@@ -189,9 +190,6 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	file_put_contents("/home/{$name}/.my.cnf", "[client]\nuser={$name}\npassword={$mysql_pass}\n");
 	$keep.=`chmod 640 /home/{$name}/.my.cnf`;
 
-	//set ssh key
-	set_ssh_key($name);
-
 	//add php-fpm pool
 	$keep.=`cp {$pwd}/etc/templates/phpfpm.template /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
 	$keep.=`sed -i 's/!USERNAME!/{$name}/g' /etc/php/{$settings['.php']}/fpm/pool.d/{$name}.conf`;
@@ -237,9 +235,8 @@ function site_add($type,$name,$domain,$email=NULL,$backups=1){
 	//set privileges
 	$keep.=`chown -R {$name}:{$name} /home/{$name}`;
 
-	//make authorized_keys immovable, it's better
-	$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
-	$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
+	//set ssh key
+	set_ssh_key($name);
 
 	//add site to list
 	$new_site[$name]=array('domain'=>$domain,'u_ssh'=>$name,'p_ssh'=>'','u_mysql'=>$name,'p_mysql'=>$mysql_pass,'backups'=>$backups);
