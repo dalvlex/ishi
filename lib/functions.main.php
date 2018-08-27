@@ -40,44 +40,30 @@ function read_settings($file){
 	return $settings;
 }
 
-function read_list($file){
+function read_list(){
 	$list=array();
 
-	$file=file_get_contents($file);
+	$file=file_get_contents('/etc/passwd');
 	$file=explode("\n",$file);
 
 	foreach($file as $fv){
-		if(strpos($fv,':')!==FALSE){
+		if(strpos($fv,'/home/build_')!==FALSE || strpos($fv,'/home/live_')!==FALSE){
 			$fv=explode(':',$fv);
-			unset($list[$fv[0]]);
-			$list[$fv[0]]=array('domain'=>$fv[1],'u_ssh'=>$fv[2],'p_ssh'=>$fv[3],'u_mysql'=>$fv[4],'p_mysql'=>$fv[5],'backups'=>$fv[6]);
+			if(strpos($fv[4],'|')!==FALSE){
+				$config=explode('|',$fv[4]);
+				$list[$fv[0]]=array('domain'=>$config[0],'backups'=>$config[1]);
+			}
 		}
 	}
 	return $list;
 }
 
-function write_sites($action,$val){
-	global $f_settings;
-	$settings=read_settings($f_settings);
-
-	$list=read_list($settings['.store_sites']);
-
-	if($action=="add"){
-
-		$new_site=key($val);
-		unset($list[$new_site]);
-		$list[$new_site]=$val[$new_site];
+function toggle_backups($name){
+	$list=read_list();
+	if(isset($list[$name])){
+		$list[$name]['backups']=abs($list[$name]['backups']-=1);
+		`usermod -c "{$list[$name]['domain']}|{$list[$name]['backups']}" {$name}`;
 	}
-	elseif($action=="del"){
-		unset($list[$val]);
-	}
-
-	$file='';
-	foreach($list as $ak => $av){
-		$file.="{$ak}:{$list[$ak]['domain']}:{$list[$ak]['u_ssh']}:{$list[$ak]['p_ssh']}:{$list[$ak]['u_mysql']}:{$list[$ak]['p_mysql']}:{$list[$ak]['backups']}\n";
-	}
-
-	file_put_contents($settings['.store_sites'],$file);
 }
 
 function generate_password($length = 9, $add_dashes = false, $available_sets = 'lud'){
@@ -90,7 +76,7 @@ function generate_password($length = 9, $add_dashes = false, $available_sets = '
 		$sets[] = '23456789';
 	if(strpos($available_sets, 's') !== false)
 		$sets[] = '!@#$%&*?';
- 
+
 	$all = '';
 	$password = '';
 	foreach($sets as $set)
@@ -98,13 +84,13 @@ function generate_password($length = 9, $add_dashes = false, $available_sets = '
 		$password .= $set[array_rand(str_split($set))];
 		$all .= $set;
 	}
- 
+
 	$all = str_split($all);
 	for($i = 0; $i < $length - count($sets); $i++)
 		$password .= $all[array_rand($all)];
- 
+
 	$password = str_shuffle($password);
- 
+
 	if(!$add_dashes)
 		return $password;
 
@@ -133,29 +119,32 @@ function set_ssh_key($name,$ssh){
 		if(strpos($ssh, ',')){
 			$ssh=explode(',',$ssh);
 
-			foreach($ssh as $fv){
-				if(strlen($fv)>=2)
+			foreach($ssh as $fv)
+				if(strlen($fv)>=2&&isset($settings['.ssh'][$fv]))
 					$authorized_keys .= "{$settings['.ssh'][$fv]}\n";
-			}
-		}else {
-			$authorized_keys .= "{$settings['.ssh'][$ssh]}\n";
+		}
+		else {
+			if(isset($settings['.ssh'][$ssh]))
+				$authorized_keys .= "{$settings['.ssh'][$ssh]}\n";
 		}
 	}
 
+	$sites=read_list();
 	if($name=="all"){
-		$sites=read_list($settings['.store_sites']);
 		foreach($sites as $nk => $nv){
 			set_ssh_key($nk,$ssh);
 		}
 		return;
+	}else{
+		if(isset($sites[$name])){
+			$keep=`mkdir -p /home/{$name}/.ssh`;
+			$keep.=`touch /home/{$name}/.ssh/authorized_keys > /dev/null 2>&1`;
+			$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
+			file_put_contents("/home/{$name}/.ssh/authorized_keys", $authorized_keys);
+			$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
+			$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
+		}
 	}
-
-	$keep=`mkdir -p /home/{$name}/.ssh`;
-	$keep.=`touch /home/{$name}/.ssh/authorized_keys > /dev/null 2>&1`;
-	$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
-	file_put_contents("/home/{$name}/.ssh/authorized_keys", $authorized_keys);
-	$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
-	$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
 }
 
 function site_is_check($name){
@@ -188,7 +177,7 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssh){
 	}
 
 	//create system account with ID over 2000.
-	$keep=`useradd -K UID_MIN=9000 -K UID_MAX=10000 -s /bin/bash -m {$name}`;
+	$keep=`useradd -K UID_MIN=9000 -K UID_MAX=10000 -c "{$domain}|{$backups}" -s /bin/bash -m {$name}`;
 
 	//check to see if user was created
 	if(!site_is_check($name)){
@@ -262,10 +251,6 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssh){
 	//set ssh key
 	set_ssh_key($name,$ssh);
 
-	//add site to list
-	$new_site[$name]=array('domain'=>$domain,'u_ssh'=>$name,'p_ssh'=>'','u_mysql'=>$name,'p_mysql'=>$mysql_pass,'backups'=>$backups);
-	write_sites('add',$new_site);
-
 	//enable nginx or apache2
 	if($settings['.web'] == 'nginx'){
 		$keep.=`ln -s /etc/nginx/sites-available/{$name} /etc/nginx/sites-enabled/{$name}`;
@@ -329,9 +314,6 @@ function site_del($name, $backups=0){
 	$keep.=`mysql --execute="DROP DATABASE IF EXISTS {$name};"`;
 
 	$keep.=`mysql --execute="DROP USER '{$name}'@'localhost';"`;
-
-	//delete site from list
-	write_sites('del',$name);
 
 	//delete nginx or apache2 site
 	if($settings['.web'] == 'nginx'){
@@ -405,7 +387,7 @@ function list_sites(){
 	global $f_settings;
 	$settings=read_settings($f_settings);
 
-	$list=read_list($settings['.store_sites']);
+	$list=read_list();
 	ksort($list);
 	$a2ensites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-enabled/';
 	$a2ensites_conf=($settings['.web'] == 'nginx'?'':'.conf');
