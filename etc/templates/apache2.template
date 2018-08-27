@@ -9,14 +9,20 @@
 #ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
 #ssl#        RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L]
 
-	Include /etc/apache2/sites-locked/!USERNAME!
-
-	<Directory "/home/!USERNAME!/www">
-		Include /etc/apache2/sites-locked/!USERNAME!_passwd
+	<Directory "/home/!USERNAME!/www/.well-known/acme-challenge">
 		AllowOverride FileInfo Limit
 		Options -Indexes +ExecCGI
 		Order deny,allow
 		Require all granted
+	</Directory>
+
+	Include /etc/apache2/sites-locked/!USERNAME!
+
+	<Directory "/home/!USERNAME!/www">
+		AllowOverride FileInfo Limit
+		Options -Indexes +ExecCGI
+		Order deny,allow
+		Include /etc/apache2/sites-locked/!USERNAME!_passwd
 	</Directory>
 
 	ErrorLog /var/log/apache2/error-!USERNAME!.log
@@ -40,19 +46,25 @@
 #ssl#        RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/(.*)$ [NC]
 #ssl#        RewriteRule ^(.*)$ https://%1$1 [R=301,L]
 
-#ssl#	     Include /etc/apache2/sites-locked/!USERNAME!
+#ssl#        <Directory "/home/!USERNAME!/www/.well-known/acme-challenge">
+#ssl#            AllowOverride FileInfo Limit
+#ssl#            Options -Indexes +ExecCGI
+#ssl#            Order deny,allow
+#ssl#            Require all granted
+#ssl#        </Directory>
+
+#ssl#        Include /etc/apache2/sites-locked/!USERNAME!
+
+#ssl#        <Directory "/home/!USERNAME!/www">
+#ssl#                AllowOverride FileInfo Limit
+#ssl#                Options -Indexes +ExecCGI
+#ssl#                Order deny,allow
+#ssl#                Include /etc/apache2/sites-locked/!USERNAME!_passwd
+#ssl#        </Directory>
 
 #ssl#        <FilesMatch \.php$>
 #ssl#                SetHandler "proxy:fcgi://127.0.0.1:!PORT!/"
 #ssl#        </FilesMatch>
-
-#ssl#        <Directory "/home/!USERNAME!/www">
-#ssl#				 Include /etc/apache2/sites-locked/!USERNAME!_passwd
-#ssl#                AllowOverride FileInfo Limit
-#ssl#                Options -Indexes +ExecCGI
-#ssl#                Order deny,allow
-#ssl#                Require all granted
-#ssl#        </Directory>
 
 #ssl#        ErrorLog /var/log/apache2/error-!USERNAME!.log
 #ssl#        CustomLog /var/log/apache2/access-!USERNAME!.log "combined"
