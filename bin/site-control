@@ -45,9 +45,13 @@ function read_args($arg){
 		list_sshkeys();
 	}
 	elseif(strcmp(trim($arg['act']),'changekeys')===0&&
-	@strlen($arg['name'])>=2&&
-	@strlen($arg['ssh'])>=2){
+		@strlen($arg['name'])>=2&&
+		@strlen($arg['ssh'])>=2){
 		set_ssh_key($arg['name'],$arg['ssh']);
+	}
+	elseif(strcmp(trim($arg['act']),'toggle')===0&&
+		@strlen($arg['name'])>=2){
+		toggle_backups($arg['name']);
 	}
 	else{
 		show_help($arg['script_name']);
@@ -60,6 +64,7 @@ function show_help($name){
 	echo " List sites:\n   {$name} act=list\n";
 	echo " List SSH keys:\n   {$name} act=listkeys\n";
 	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|key1,key3,key4>\n";
+	echo " Toggle backups ON/OFF:\n   {$name} act=toggle name=<site_name>\n";
 }
 
 
