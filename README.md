@@ -74,3 +74,21 @@ and take note of mySQL password if auth isn't made with PAM
 `mkdir /var/log/spamassassin`  
 `chown spamd:spamd /var/log/spamassassin`  
 `service spamassassin restart`  
+
+6. Install crontab
+```# m h  dom mon dow   command
+
+# Backup all sites
+0 5 * * * cd /root/ishi; ./backup-control act=backup name=ALL type=daily > /dev/null 2>&1
+0 7 6 * * cd /root/ishi; ./backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
+
+# Rotate the backups according to etc/settings
+45 * * * * cd /root/ishi; ./backup-control act=rotate > /dev/null 2>&1
+
+# Renew LetsEncrypt certificates weekly
+@weekly /opt/letsencrypt/letsencrypt-auto renew && /usr/sbin/service nginx reload > /dev/null 2>&1
+
+# Renew Ishi code from GitHub daily
+@daily /usr/bin/git -C /root/ishi reset --hard && git -C /root/ishi clean -f && git -C /root/ishi pull > /dev/null 2>&1
+
+```
