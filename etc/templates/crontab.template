@@ -10,3 +10,4 @@
 
 # Renew Ishi code from GitHub daily
 @daily /usr/bin/git -C /root/ishi reset --hard && git -C /root/ishi clean -f && git -C /root/ishi pull > /dev/null 2>&1
+

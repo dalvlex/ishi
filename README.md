@@ -91,3 +91,6 @@ and take note of mySQL password if auth isn't made with PAM
 @daily /usr/bin/git -C /root/ishi reset --hard && git -C /root/ishi clean -f && git -C /root/ishi pull > /dev/null 2>&1
 
 ```
+**OR** `crontab /root/ishi/etc/templates/crontab.template`  
+
+
