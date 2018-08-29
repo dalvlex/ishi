@@ -46,15 +46,27 @@ and take note of mySQL password if auth isn't made with PAM
     `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
     
     *Disable default page*  
+    ```
     echo '<Directory />  
     Order Deny,Allow  
     Deny from all  
     Options None  
     AllowOverride None  
     </Directory>' |cat - /etc/apache2/apache2.conf > temp_file && mv temp_file /etc/apache2/apache2.conf
-    
+    ```
+
     *Configure password for unlocked sites*  
     `htpasswd -c /etc/apache2/.htpasswd username_here`  
+
+    *Log real IP address of web users coming through CloudFlare for fail2ban use*
+    ```
+    echo 'RemoteIPHeader CF-Connecting-IP  
+    RemoteIPTrustedProxy 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 104.16.0.0/12 108.162.192.0/18 131.0.72.0/22 141.101.64.0/18 162.158.0.0/15 172.64.0.0/13 173.245.48.0/20 188.114.96.0/20 190.93.240.0/20 197.234.240.0/22 198.41.128.0/17 2400:cb00::/32 2405:8100::/32 2405:b500::/32 2606:4700::/32 2803:f800::/32 2c0f:f248::/32 2a06:98c0::/29' > /etc/apache2/conf-available/remoteip.conf;  
+    a2enmod remoteip;  
+    a2enconf remoteip;  
+    ```
+
+    **Restart web server**  
     `service apache2 restart`
 
   * *Install nginx*  
@@ -65,9 +77,38 @@ and take note of mySQL password if auth isn't made with PAM
     
     *Configure password for unlocked sites*  
     `htpasswd -c /etc/nginx/.htpasswd username_here`  
+
+    *Log real IP address of web users coming through CloudFlare for fail2ban use*
+    ```
+    # insert the following into /etc/nginx.conf http {} context
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 104.16.0.0/12;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 131.0.72.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2c0f:f248::/32;
+    set_real_ip_from 2a06:98c0::/29;
+    real_ip_header CF-Connecting-IP;
+    ```
+
+    **Restart web server**  
     `service nginx restart`
 
-5. Install mail server if needed
+5. Install mail server if needed  
 `apt install postfix postgrey postsrsd spamassassin spamc`  
 `groupadd spamd`  
 `useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd`  
@@ -75,22 +116,7 @@ and take note of mySQL password if auth isn't made with PAM
 `chown spamd:spamd /var/log/spamassassin`  
 `service spamassassin restart`  
 
-6. Install crontab
-```
-# Backup all sites
-0 5 * * * /root/ishi/bin/backup-control act=backup name=ALL type=daily > /dev/null 2>&1
-0 7 6 * * /root/ishi/bin/backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
-
-# Rotate the backups according to etc/settings
-45 * * * * /root/ishi/bin/backup-control act=rotate > /dev/null 2>&1
-
-# Renew LetsEncrypt certificates weekly
-@weekly /opt/letsencrypt/letsencrypt-auto renew && /usr/sbin/service nginx reload > /dev/null 2>&1
-
-# Renew Ishi code from GitHub daily
-@daily /usr/bin/git -C /root/ishi reset --hard && git -C /root/ishi clean -f && git -C /root/ishi pull > /dev/null 2>&1
-
-```
-**OR** `crontab /root/ishi/etc/templates/crontab.template`  
+6. Install crontab  
+`crontab /root/ishi/etc/templates/crontab.template`  
 
 
