@@ -36,10 +36,8 @@ Use `-o dbglevel=info -f -o curldbg` for debugging.
 `apt update`
 
 3. Add general packages
-`apt install mysql-server apache2-utils`  
+`apt install mysql-server apache2-utils php-fpm php-cli php-mysql php-curl git sqlite3 fail2ban letsencrypt`  
 and take note of mySQL password if auth isn't made with PAM  
-`apt install php-fpm php-cli php-mysql`  
-`apt install git sqlite3 fail2ban letsencrypt`
 
 4. Configure webserver
   * *Install apache2*  
