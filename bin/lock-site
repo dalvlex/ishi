@@ -33,29 +33,33 @@ foreach($file as $fv){
 	$fv=explode("=",$fv);
 	$config[$fv[0]][]=$fv[1];
 }
-if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
+/*if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
 	echo "ERROR: At least one of each must be present in config lock_dirfile, lock_fileedit, lock_ownerread, allowwrite_denyphp.\n";
 	exit;
-}
+}*/
 echo "Safety unlock first.\n";
-`/root/ishi/unlock_site $name`;
+`/root/ishi/bin/unlock_site $name`;
 
 echo "Locking site {$name}:\n";
+if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
 foreach($config['lock_dirfile'] as $cv){
 	$cv=rtrim($cv,"/");
 	echo "- Lock directory & file creation for DIR {$cv}\n";
 	`chmod 555 $cv`;
 	`find $cv -type d -exec chmod 555 {} +`;
 }
+if(isset($config['lock_fileedit']) && is_array($config['lock_fileedit']))
 foreach($config['lock_fileedit'] as $cv){
     $cv=rtrim($cv,"/")."/";
     echo "- Lock file editing for DIR {$cv}\n";
     `find $cv -type f -exec chmod 444 {} +`;
 }
+if(isset($config['lock_ownerread']) && is_array($config['lock_ownerread']))
 foreach($config['lock_ownerread'] as $cv){
     echo "- Allow read only for owner for FILE {$cv}\n";
     `chmod 400 $cv`;
 }
+if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp']))
 foreach($config['allowwrite_denyphp'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Allow write for DIR {$cv}\n";
@@ -63,12 +67,14 @@ foreach($config['allowwrite_denyphp'] as $cv){
     `find $cv -type d -exec chmod 755 {} +`;
 	`find $cv -type f -exec chmod 644 {} +`;
 }
+if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
 foreach($config['lock_dirfile'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Make all files immutable for DIR {$cv}\n";
     `chattr +i $cv`;
     `find $cv -type f -exec chattr +i {} +`;
 }
+if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp']))
 foreach($config['allowwrite_denyphp'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Remove immutable flag for DIR {$cv}\n";
@@ -78,6 +84,7 @@ foreach($config['allowwrite_denyphp'] as $cv){
 
 //lock site
 $phpd="";
+if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp']))
 foreach($config['allowwrite_denyphp'] as $cv){
     $cv=trim($cv);
     echo "- Deny PHP execution in DIR {$cv}\n";
@@ -85,18 +92,20 @@ foreach($config['allowwrite_denyphp'] as $cv){
 }
 $phpd=trim($phpd,"|");
 
-if(strcmp($web_server, 'nginx') === 0){
-	$phpd='location ~* /('.$phpd.')/.*\.php$ {
-		return 403;
+if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp'])){
+	if(strcmp($web_server, 'nginx') === 0){
+		$phpd='location ~* /('.$phpd.')/.*\.php$ {
+			return 403;
+		}
+		';
+	}else{
+		$phpd='<Directory "^('.$phpd.')">
+	     <FilesMatch "(?i)\.(php|php3?|phtml)$">
+	            Order Deny,Allow
+	            Deny from All
+	    </FilesMatch>
+	 </Directory>';
 	}
-	';
-}else{
-	$phpd='<Directory "^('.$phpd.')">
-     <FilesMatch "(?i)\.(php|php3?|phtml)$">
-            Order Deny,Allow
-            Deny from All
-    </FilesMatch>
- </Directory>';
 }
 file_put_contents($phpdeny_folder.$name,$phpd);
 

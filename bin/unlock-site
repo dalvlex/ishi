@@ -33,28 +33,32 @@ foreach($file as $fv){
 	$fv=explode("=",$fv);
 	$config[$fv[0]][]=$fv[1];
 }
-if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
+/*if(empty($config['lock_dirfile'])|empty($config['lock_fileedit'])|empty($config['lock_ownerread'])|empty($config['allowwrite_denyphp'])) { 
 	echo "ERROR: At least one of each must be present in config lock_dirfile, lock_fileedit, lock_ownerread, allowwrite_denyphp.\n";
 	exit;
-}
+}*/
 echo "Unlocking site {$name}:\n";
 
+if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
 foreach($config['lock_dirfile'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Remove immutable flag for DIR {$cv}\n";
     `chattr -i $cv`;
     `find $cv -type f -exec chattr -i {} +`;
 }
+if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
 foreach($config['lock_dirfile'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Set relaxed permissions for DIR {$cv}\n";
 	`find $cv -type d -exec chmod 755 {} +`;
 	`find $cv -type f -exec chmod 644 {} +`;
 }
+if(isset($config['lock_ownerread']) && is_array($config['lock_ownerread']))
 foreach($config['lock_ownerread'] as $cv){
     echo "- Set relaxed permissions for FILE {$cv}\n";
 	`chmod 600 $cv`;
 }
+if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
 foreach($config['lock_dirfile'] as $cv){
     $cv=rtrim($cv,"/");
     echo "- Change ownership to rightful owner for DIR {$cv}\n";
