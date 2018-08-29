@@ -150,14 +150,9 @@ function set_ssh_key($name,$ssh){
 function site_is_check($name){
 	global $f_settings;
 	$settings=read_settings($f_settings);
+	$list=read_list();
 
 	if(strpos(file_get_contents('/etc/passwd'),$name.':')===FALSE){
-		return FALSE;
-	}else{
-		return TRUE;
-	}
-
-	if(strpos(file_get_contents($settings['.store_sites']),$name.':')===FALSE){
 		return FALSE;
 	}else{
 		return TRUE;
@@ -298,7 +293,11 @@ function site_del($name, $backups=0){
 	}
 
 	//get domain name
-	$domain = trim(`cat {$settings['.store_sites']} |grep {$name} |awk -F ":" '{print $2}'`);
+	$list=read_list();
+	$domain=$list[$name]['domain'];
+
+	//if we couldn't get domain then FAIL
+	if(!strlen($domain)) return false;
 
 	//remove immutable flag
 	$keep=`find /home/{$name} -type f -exec chattr -i {} \;`;
