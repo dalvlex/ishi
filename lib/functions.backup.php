@@ -5,7 +5,7 @@ $backup_types=array('daily'=>1,'weekly'=>1,'user'=>1);
 function backup_site($name="ALL",$type="ALL"){
 	global $f_settings, $backup_types;
 	$settings=read_settings($f_settings);
-	$list=read_list($settings['.store_sites']);
+	$list=read_list();
 	
 	if($name=="ALL"){
 		if($type=="ALL"){
@@ -57,8 +57,6 @@ function backup_site($name="ALL",$type="ALL"){
 	$keep=`rm -rf /tmp/database_dump.sql`;
 
 	if(is_file("{$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz")){
-		write_backups('add',$name,$type,$date);
-
 		return TRUE;
 	}
 
@@ -86,12 +84,6 @@ function list_backups($name="ALL"){
 		}
 	}
 
-/*	foreach($file as $fv){
-		if(strpos($fv,':')!==FALSE){
-			$fv=explode(':',$fv);
-			$list[$fv[0]][$fv[1]][$fv[2]]=$fv[3];
-		}
-	}*/
 	if($name!="ALL"&&isset($list[$name])){
 		return array($name=>$list[$name]);
 	}
@@ -101,34 +93,6 @@ function list_backups($name="ALL"){
 	else{
 		return FALSE;
 	}
-}
-
-function write_backups($action,$name,$type,$date){
-	$list=list_backups();
-
-	if($action=="add"){
-		$new_backup="{$name}-{$type}_{$date}.tar.gz";
-		if(isset($list[$name][$type][$date]))  unset($list[$name][$type][$date]);
-
-		$list[$name][$type][$date]=$new_backup;
-	}
-	elseif($action=="del"){
-		if(isset($list[$name][$type][$date])) unset($list[$name][$type][$date]);
-	}
-	
-	$file='';
-	foreach($list as $nk => $nv){
-		foreach($nv as $tk => $tv){
-			foreach($tv as $dk => $dv){
-				$file.="{$nk}:{$tk}:{$dk}:{$nk}-{$tk}_{$dk}.tar.gz\n";
-			}
-		}
-	}
-
-	global $f_settings;
-	$settings=read_settings($f_settings);
-
-	return file_put_contents($settings['.store_backups'],$file);
 }
 
 function backup_rotate($site="ALL"){
@@ -153,7 +117,6 @@ function backup_rotate($site="ALL"){
 				while(count($list[$site][$ck])>$cv){
 					$key=min(array_keys($list[$site][$ck]));
 					$keep=`rm -rf {$settings['.backup_path']}/{$list[$site][$ck][$key]}`;
-					write_backups('del',$site,$ck,$key);
 					unset($list[$site][$ck][$key]);
 				}
 			}
