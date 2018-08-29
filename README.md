@@ -190,6 +190,12 @@ recipient_canonical_classes= envelope_recipient,header_recipient
 ```
 
 ```
+# create virtual alias file for mail forwarding
+touch /etc/postfix/virtual_alias_domains;
+postmap /etc/postfix/virtual_alias_domains;
+```
+
+```
 # replace in /etc/default/postgrey
 POSTGREY_OPTS="--inet=10023 --delay 2 --max-age=20"
 ```
