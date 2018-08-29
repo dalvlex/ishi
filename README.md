@@ -36,7 +36,7 @@ Use `-o dbglevel=info -f -o curldbg` for debugging.
 `apt update`
 
 3. Add general packages
-`apt install debconf-utils mysql-server apache2-utils`  
+`apt install mysql-server apache2-utils`  
 and take note of mySQL password if auth isn't made with PAM  
 `apt install php-fpm php-cli php-mysql`  
 `apt install git sqlite3 fail2ban letsencrypt`
@@ -74,7 +74,7 @@ and take note of mySQL password if auth isn't made with PAM
     `service apache2 restart`
 
   * *Install nginx*  
-    `apt install nginx nginx-extras apache2-utils`
+    `apt install nginx nginx-extras`
     
     *Disable default page*  
     `rm -rf /etc/nginx/sites-enabled/default`
