@@ -3,7 +3,8 @@ Ishi site management (for Ubuntu)
 
 ### Install ishi
 `git clone https://github.com/dalvlex/ishi /root/ishi`  
-Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!
+Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
+**Don't forget to configure ishi in etc/settings**
 
 ### Amazon S3 backup storage
 1. Install **s3fs**  
