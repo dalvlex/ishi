@@ -109,17 +109,103 @@ and take note of mySQL password if auth isn't made with PAM
     real_ip_header CF-Connecting-IP;
     ```
 
-
     **Restart web server**  
     `service nginx restart`
 
 5. Install mail server if needed  
-`apt install postfix postgrey postsrsd spamassassin spamc`  
-`groupadd spamd`  
-`useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd`  
-`mkdir /var/log/spamassassin`  
-`chown spamd:spamd /var/log/spamassassin`  
-`service spamassassin restart`  
+```
+# install services
+apt install postfix postgrey postsrsd spamassassin spamc
+groupadd spamd
+useradd -g spamd -s /bin/false -d /var/log/spamassassin spamd
+mkdir /var/log/spamassassin
+chown spamd:spamd /var/log/spamassassin
+echo '-d 127.0.0.1' > /etc/spamassassin/spamc.conf
+```
+
+```
+# change in /etc/postfix/master.cf first line to output mails through spamassassin
+smtp      inet  n       -       y       -       -       smtpd -o content_filter=spamassassin
+
+# append to /etc/postfix/master.cf
+spamassassin unix -     n       n       -       -       pipe
+                user=spamd argv=/usr/bin/spamc -f -e
+                /usr/sbin/sendmail -oi -f ${sender} ${recipient}
+```
+
+```
+# replace /etc/postix/main.cf with the following, and replace IPV4_address, IPV6_address, DOMAIN_main, DOMAIN_secondary, SENDGRID_apikey with the corresponding values
+# IPV4_address = public IPv4 server address;
+# IPV6_address = public IPv6 server address;
+# DOMAIN_main = the main domain of the server, you need at least one;
+# DOMAIN_secondary = any number of additional domains that the server will handle mail for - these are optional;
+# SENDGRID_apikey = this will be generated and obtained from an account on https://sendgrid.com
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+myhostname = DOMAIN_main
+mydestination = localhost
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = IPV4_address, IPV6_address
+inet_protocols = all
+
+smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, check_policy_service inet:127.0.0.1:10023
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = static:apikey:SENDGRID_apikey
+smtp_sasl_security_options = noanonymous
+smtp_tls_security_level = encrypt
+header_size_limit = 4096000
+relayhost = [smtp.sendgrid.com]:587
+
+virtual_alias_domains = DOMAIN_main, DOMAIN_secondary, DOMAIN_secondary, DOMAIN_secondary
+virtual_alias_maps = hash:/etc/postfix/virtual_alias_domains
+alias_maps = 
+
+sender_canonical_maps = tcp:localhost:10001
+sender_canonical_classes = envelope_sender
+recipient_canonical_maps = tcp:localhost:10002
+recipient_canonical_classes= envelope_recipient,header_recipient
+```
+
+```
+# replace in /etc/default/postgrey
+POSTGREY_OPTS="--inet=10023 --delay 2 --max-age=20"
+```
+
+```
+# replace in /etc/default/postsrsd with DOMAIN_main, see above
+SRS_DOMAIN=DOMAIN_main
+```
+
+```
+# restart services
+service spamassassin restart
+service postgrey restart
+service postsrsd restart
+service postfix restart
+```
 
 6. Install crontab  
 `crontab /root/ishi/etc/templates/crontab.template`  
