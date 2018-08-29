@@ -73,7 +73,7 @@ and take note of mySQL password if auth isn't made with PAM
     `service apache2 restart`
 
   * *Install nginx*  
-    `apt install nginx`
+    `apt install nginx nginx-extras`
     
     *Disable default page*  
     `rm -rf /etc/nginx/sites-enabled/default`
