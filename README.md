@@ -58,12 +58,15 @@ and take note of mySQL password if auth isn't made with PAM
     *Configure password for unlocked sites*  
     `htpasswd -c /etc/apache2/.htpasswd username_here`  
 
-    *Log real IP address of web users coming through CloudFlare for fail2ban use*
+    *Log real IP address of web users coming through CloudFlare for fail2ban use*  
+    Check to see if the IPs match the ones on this page https://www.cloudflare.com/ips/  
     ```
     echo 'RemoteIPHeader CF-Connecting-IP  
     RemoteIPTrustedProxy 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 104.16.0.0/12 108.162.192.0/18 131.0.72.0/22 141.101.64.0/18 162.158.0.0/15 172.64.0.0/13 173.245.48.0/20 188.114.96.0/20 190.93.240.0/20 197.234.240.0/22 198.41.128.0/17 2400:cb00::/32 2405:8100::/32 2405:b500::/32 2606:4700::/32 2803:f800::/32 2c0f:f248::/32 2a06:98c0::/29' > /etc/apache2/conf-available/remoteip.conf;  
     a2enmod remoteip;  
     a2enconf remoteip;  
+
+    # also edit /etc/apache2/apache2.conf and for LogFormat directives replace %h with %a everywhere!
     ```
 
     **Restart web server**  
@@ -78,7 +81,8 @@ and take note of mySQL password if auth isn't made with PAM
     *Configure password for unlocked sites*  
     `htpasswd -c /etc/nginx/.htpasswd username_here`  
 
-    *Log real IP address of web users coming through CloudFlare for fail2ban use*
+    *Log real IP address of web users coming through CloudFlare for fail2ban use*  
+    Check to see if the IPs match the ones on this page https://www.cloudflare.com/ips/  
     ```
     # insert the following into /etc/nginx.conf http {} context
     set_real_ip_from 103.21.244.0/22;
@@ -104,6 +108,7 @@ and take note of mySQL password if auth isn't made with PAM
     set_real_ip_from 2a06:98c0::/29;
     real_ip_header CF-Connecting-IP;
     ```
+
 
     **Restart web server**  
     `service nginx restart`
