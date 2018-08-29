@@ -38,7 +38,7 @@ foreach($file as $fv){
 	exit;
 }*/
 echo "Safety unlock first.\n";
-`/root/ishi/bin/unlock_site $name`;
+`/root/ishi/bin/unlock-site $name`;
 
 echo "Locking site {$name}:\n";
 if(isset($config['lock_dirfile']) && is_array($config['lock_dirfile']))
