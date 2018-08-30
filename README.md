@@ -6,6 +6,17 @@ Ishi site management (for Ubuntu)
 Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
 **Don't forget to configure ishi in etc/settings**
 
+### System prerequisites
+1. Fix environment lang variables in ssh and disable password auth  
+`sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
+`sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
+`service ssh restart`
+**relogin to SSH**
+
+2. Update the system
+`apt update`
+`apt upgrade`
+
 ### Amazon S3 backup storage
 1. Install **s3fs**  
 `apt install s3fs`  
@@ -26,20 +37,13 @@ If you want to just mount it manually without adding it to /etc/fstab
 Be sure to change *eu-central-1* to whatever you Amazon S3 zone is, because s3fs loses proper auth between redirects and it will not work otherwise.  
 Use `-o dbglevel=info -f -o curldbg` for debugging.  
 
-### System prerequisites
-1. Fix environment lang variables in ssh and disable password auth  
-`sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
-`sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
-`service ssh restart`
 
-2. Update the system
-`apt update`
-
-3. Add general packages
+### Install software
+1. Add general packages
 `apt install mysql-server apache2-utils php-fpm php-cli php-mysql php-curl git sqlite3 fail2ban letsencrypt`  
 and take note of mySQL password if auth isn't made with PAM  
 
-4. Configure webserver
+2. Configure webserver
   * *Install apache2*  
     `apt install apache2 apache2-suexec-custom`  
     `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
@@ -111,7 +115,7 @@ and take note of mySQL password if auth isn't made with PAM
     **Restart web server**  
     `service nginx restart`
 
-5. Install mail server if needed  
+3. Install mail server if needed  
 ```
 # install services
 apt install postfix postgrey postsrsd spamassassin spamc
@@ -212,7 +216,7 @@ service postsrsd restart
 service postfix restart
 ```
 
-6. Install crontab  
+4. Install crontab  
 `crontab /root/ishi/etc/templates/crontab.template`  
 
 
