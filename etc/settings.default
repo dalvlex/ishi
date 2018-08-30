@@ -7,9 +7,9 @@
 .php=7.2
 
 # how much time to keep backups, depending on type
-.keep_weekly=3
-.keep_daily=2
-.keep_user=2
+.keep_weekly=4
+.keep_daily=6
+.keep_user=5
 
 # paths to configuration files
 .lock_sites=/root/ishi/etc/sites-locked
