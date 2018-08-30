@@ -10,11 +10,11 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 1. Fix environment lang variables in ssh and disable password auth  
 `sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
 `sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
-`service ssh restart`
+`service ssh restart`  
 **relogin to SSH**
 
-2. Update the system
-`apt update`
+2. Update the system  
+`apt update`  
 `apt upgrade`
 
 ### Amazon S3 backup storage
