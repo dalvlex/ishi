@@ -133,8 +133,9 @@ spamassassin unix -     n       n       -       -       pipe
 ```
 
 ```
-# replace /etc/postix/main.cf with the following, and replace IPV4_address, DOMAIN_main, DOMAIN_secondary, SENDGRID_apikey with the corresponding values
+# replace /etc/postix/main.cf with the following, and replace IPV4_address, IPV6_address, DOMAIN_main, DOMAIN_secondary, SENDGRID_apikey with the corresponding values
 # IPV4_address = public IPv4 server address;
+# IPV6_address = public IPv6 server address;
 # DOMAIN_main = the main domain of the server, you need at least one;
 # DOMAIN_secondary = any number of additional domains that the server will handle mail for - these are optional;
 # SENDGRID_apikey = this will be generated and obtained from an account on https://sendgrid.com
@@ -165,7 +166,7 @@ mydestination = localhost
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
 recipient_delimiter = +
-inet_interfaces = IPV4_address
+inet_interfaces = IPV4_address IPV6_address
 inet_protocols = all
 
 smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, check_policy_service inet:127.0.0.1:10023
