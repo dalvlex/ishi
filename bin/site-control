@@ -1,6 +1,8 @@
 #!/usr/bin/php
 <?php
 require_once( realpath( dirname( __FILE__ ) ) . '/../lib/functions.main.php' );
+if(!is_file($f_settings))
+	die("You do not have a settings file in {$f_settings}. Aborting...\n");
 
 read_args(arg_array($argv));
 
