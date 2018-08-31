@@ -3,7 +3,7 @@
 $backup_types=array('daily'=>1,'weekly'=>1,'user'=>1);
 
 function backup_site($name="ALL",$type="ALL"){
-	global $f_settings, $backup_types;
+	global $f_settings, $backup_types, $pwd;
 	$settings=read_settings($f_settings);
 	$list=read_list();
 	
@@ -53,7 +53,8 @@ function backup_site($name="ALL",$type="ALL"){
 	$date=date("Ymd_His",time());
 
 	$keep=`mysqldump {$name} > /tmp/database_dump.sql; chown -R {$name}:{$name} /tmp/database_dump.sql`;
-	$keep=`tar czf {$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+	$keep=`tar czf {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+	$keep=`mv {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz {$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz`;
 	$keep=`rm -rf /tmp/database_dump.sql`;
 
 	if(is_file("{$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz")){
