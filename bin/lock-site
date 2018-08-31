@@ -83,31 +83,35 @@ foreach($config['allowwrite_denyphp'] as $cv){
 }
 
 //lock site
-$phpd="";
+$phpd_nginx=$phpd_apache="";
 if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp']))
 foreach($config['allowwrite_denyphp'] as $cv){
     $cv=trim($cv);
     echo "- Deny PHP execution in DIR {$cv}\n";
-	$phpd.=$cv.'|';
+	$phpd_nginx.=str_replace('/home/'.$name.'/www', '', $cv).'|';
+	$phpd_apache.=$cv.'|';
 }
-$phpd=trim($phpd,"|");
+$phpd_nginx=trim($phpd_nginx,"|");
+$phpd_apache=trim($phpd_apache,"|");
 
 if(isset($config['allowwrite_denyphp']) && is_array($config['allowwrite_denyphp'])){
 	if(strcmp($web_server, 'nginx') === 0){
-		$phpd='location ~* /('.$phpd.')/.*\.php$ {
+		$phpd_nginx='location ~* ('.$phpd_nginx.')/.*\.php.*$ {
+			root /home/'.$name.'/www;
 			return 403;
 		}
 		';
 	}else{
-		$phpd='<Directory "^('.$phpd.')">
-	     <FilesMatch "(?i)\.(php|php3?|phtml)$">
+		$phpd_apache='<Directory "^('.$phpd_apache.')">
+	     <FilesMatch "(?i)\.php.*$">
 	            Order Deny,Allow
 	            Deny from All
 	    </FilesMatch>
 	 </Directory>';
 	}
 }
-file_put_contents($phpdeny_folder.$name,$phpd);
+file_put_contents($phpdeny_folder.$name,$web_server=='nginx'?$phpd_nginx:$phpd_apache);
+
 
 echo "- Disable password for {$name}\n";
 //remove passwd
