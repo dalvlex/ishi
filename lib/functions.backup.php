@@ -136,6 +136,8 @@ function backup_rotate($site="ALL"){
 		global $f_settings;
 		$settings=read_settings($f_settings);
 
+		check_mountpoint($settings['.backup_path']);
+
 		$c=array();
 		$c['daily']=$settings['.keep_daily'];
 		$c['weekly']=$settings['.keep_weekly'];
