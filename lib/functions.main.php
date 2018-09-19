@@ -141,6 +141,7 @@ function set_ssh_key($name,$ssh){
 			$keep.=`touch /home/{$name}/.ssh/authorized_keys > /dev/null 2>&1`;
 			$keep.=`chattr -i /home/{$name}/.ssh/authorized_keys`;
 			file_put_contents("/home/{$name}/.ssh/authorized_keys", $authorized_keys);
+			$keep.=`chown {$name}:{$name} /home/{$name}/.ssh/authorized_keys`;
 			$keep.=`chmod 400 /home/{$name}/.ssh/authorized_keys`;
 			$keep.=`chattr +i /home/{$name}/.ssh/authorized_keys`;
 		}
