@@ -54,6 +54,11 @@ function backup_site($name="ALL",$type="ALL"){
 
 	$keep=`mysqldump {$name} > /tmp/database_dump.sql; chown -R {$name}:{$name} /tmp/database_dump.sql`;
 	$keep=`tar czf {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+
+	// check and reconnect mountpoint if necessary
+	check_mountpoint($settings['.backup_path']);
+
+	// move backup to Amazon S3
 	$keep=`mv {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz {$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz`;
 	$keep=`rm -rf /tmp/database_dump.sql`;
 
@@ -62,6 +67,30 @@ function backup_site($name="ALL",$type="ALL"){
 	}
 
 	return FALSE;
+}
+
+function check_mountpoint($path, $count = 0){
+	// give up after three retries
+	if($count > 3) return;
+
+	// check mountpoint
+	$mountpoint = trim(`mount |grep -c {$path}`);
+	if(!$mountpoint) {
+
+		// reconnect mountpoint
+		$mountpoint = `umount -l {$path}`;
+		$mountpoint = `umount -f {$path}`;
+		$mountpoint = `mount {$path}`;
+		sleep(1);
+
+		// recheck whole procedure
+		$count++;
+		check_mountpoint($path, $count);
+	}
+	else {
+		// all is fine, exit
+		return;
+	}
 }
 
 function list_backups($name="ALL"){
