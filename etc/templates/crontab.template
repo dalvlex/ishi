@@ -9,5 +9,8 @@
 @weekly /usr/bin/letsencrypt renew && /usr/sbin/service nginx reload > /dev/null 2>&1
 
 # Renew Ishi code from GitHub daily
-@daily /usr/bin/git -C /root/ishi reset --hard && git -C /root/ishi clean -f && git -C /root/ishi pull > /dev/null 2>&1
+@daily /usr/bin/git -C /root/ishi reset --hard > /dev/null 2>&1 && git -C /root/ishi clean -f > /dev/null 2>&1 && git -C /root/ishi pull > /dev/null 2>&1
+
+# Renew fail2filters from GitHub daily
+@daily /usr/bin/git -C /root/fail2filters reset --hard > /dev/null 2>&1 && git -C /root/fail2filters clean -f > /dev/null 2>&1 && git -C /root/fail2filters pull > /dev/null 2>&1 && /root/fail2filters/install 1 > /dev/null 2>&1
 
