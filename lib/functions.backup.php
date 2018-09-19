@@ -78,9 +78,9 @@ function check_mountpoint($path, $count = 0){
 	if(!$mountpoint) {
 
 		// reconnect mountpoint
-		$mountpoint = `umount -l {$path}`;
-		$mountpoint = `umount -f {$path}`;
-		$mountpoint = `mount {$path}`;
+		$mountpoint = `umount -l {$path} > /dev/null 2>&1`;
+		$mountpoint = `umount -f {$path} > /dev/null 2>&1`;
+		$mountpoint = `mount {$path} > /dev/null 2>&1`;
 		sleep(1);
 
 		// recheck whole procedure
@@ -126,6 +126,12 @@ function list_backups($name="ALL"){
 }
 
 function backup_rotate($site="ALL"){
+	global $f_settings;
+	$settings=read_settings($f_settings);
+
+	// check and reconnect mountpoint on Amazon S3
+	check_mountpoint($settings['.backup_path']);
+
 	if($site=="ALL"){
 		$list=list_backups();
 		foreach($list as $nk => $nv){
@@ -133,11 +139,6 @@ function backup_rotate($site="ALL"){
 		}
 	}
 	else{
-		global $f_settings;
-		$settings=read_settings($f_settings);
-
-		check_mountpoint($settings['.backup_path']);
-
 		$c=array();
 		$c['daily']=$settings['.keep_daily'];
 		$c['weekly']=$settings['.keep_weekly'];
