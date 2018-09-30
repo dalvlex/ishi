@@ -17,6 +17,16 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 `apt update`  
 `apt upgrade`
 
+### Enable swap on low resource servers
+`fallocate -l 2G /swapfile`  
+`chmod 600 /swapfile`  
+`mkswap /swapfile`  
+`swapon /swapfile`  
+`swapon --show`  
+`echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab`  
+`sysctl vm.swappiness=10`  
+`echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf`  
+
 ### Amazon S3 backup storage
 1. Install **s3fs**  
 `apt install s3fs`  
