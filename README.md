@@ -26,6 +26,8 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 `echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab`  
 `sysctl vm.swappiness=10`  
 `echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf`  
+`sysctl vm.vfs_cache_pressure=50`  
+`echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf`  
 
 ### Amazon S3 backup storage
 1. Install **s3fs**  
