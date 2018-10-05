@@ -51,7 +51,7 @@ Use `-o dbglevel=info -f -o curldbg` for debugging.
 and take note of mySQL password if auth isn't made with PAM  
 
 #### 2. Configure webserver
-#####  * *Install apache2*  
+  * *Install apache2*  
     `apt install apache2 apache2-suexec-custom`  
     `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
     
@@ -82,7 +82,7 @@ and take note of mySQL password if auth isn't made with PAM
     Restart web server  
     `service apache2 restart`
 
-#####  * *Install nginx*  
+  * *Install nginx*  
     `apt install nginx nginx-extras`
     
     *Disable default page*  
