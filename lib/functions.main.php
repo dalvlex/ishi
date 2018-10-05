@@ -51,7 +51,7 @@ function read_list(){
 			$fv=explode(':',$fv);
 			if(strpos($fv[4],'|')!==FALSE){
 				$config=explode('|',$fv[4]);
-				$list[$fv[0]]=array('domain'=>$config[0],'backups'=>$config[1]);
+				$list[$fv[0]]=array('domain'=>$config[0],'backups'=>$config[1],'email'=>$config[2]);
 			}
 		}
 	}
@@ -160,7 +160,7 @@ function site_is_check($name){
 	}
 }
 
-function site_add($type,$name,$domain,$email,$backups=1,$ssh){
+function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 	global $pwd, $f_settings;
 	$settings=read_settings($f_settings);
 
@@ -168,7 +168,7 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssh){
 
 	//check if user exists
 	if(site_is_check($name)){
-		echo "It appears that this site already exists!\n";exit;
+		echo die("It appears that this site already exists!\n");
 		return FALSE;
 	}
 
@@ -266,22 +266,34 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssh){
 		$keep.=`service apache2 restart`;
 	}
 
-	//get ssl certificate
-	if(strpos($email,'@')!==FALSE){
-		$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
-
-		// add SSL certificate to nginx or apache2
-		if($settings['.web'] == 'nginx'){
-			$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
-			$keep.=`service nginx restart`;
-		}
-		else{
-			$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}.conf`;
-			$keep.=`service apache2 restart`;
-		}
+	//generate and enable ssl certificate, if user did not request it to be disabled
+	if($ssl){
+		generate_ssl($name, $email, $domain);
 	}
 
 	return TRUE;
+}
+
+function generate_ssl($name, $email, $domain){
+	$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
+
+	// add SSL certificate to nginx or apache2
+	if($settings['.web'] == 'nginx'){
+		$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
+		$keep.=`service nginx restart`;
+	}
+	else{
+		$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}.conf`;
+		$keep.=`service apache2 restart`;
+	}
+}
+
+function enable_ssl($name){
+	$list=read_list();
+	print_r($list);exit;
+	if(isset($list[$name])){
+		generate_ssl($name, $list[$name]['email'], $list[$name]['domain']);
+	}
 }
 
 function site_del($name, $backups=0){
