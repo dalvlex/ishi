@@ -274,7 +274,10 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 }
 
 function generate_ssl($name, $email, $domain){
-	$keep.=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
+	global $pwd, $f_settings;
+	$settings=read_settings($f_settings);
+
+	$keep=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
 
 	// add SSL certificate to nginx or apache2
 	if($settings['.web'] == 'nginx'){
