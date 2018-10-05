@@ -62,7 +62,7 @@ function toggle_backups($name){
 	$list=read_list();
 	if(isset($list[$name])){
 		$list[$name]['backups']=abs($list[$name]['backups']-=1);
-		`usermod -c "{$list[$name]['domain']}|{$list[$name]['backups']}" {$name}`;
+		`usermod -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" {$name}`;
 	}
 }
 
