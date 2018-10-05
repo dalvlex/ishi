@@ -46,11 +46,11 @@ Use `-o dbglevel=info -f -o curldbg` for debugging.
 
 
 ### Install software
-1. Add general packages
+#### 1. Add general packages
 `apt install mysql-server apache2-utils php-fpm php-cli php-mysql php-curl git sqlite3 fail2ban letsencrypt`  
 and take note of mySQL password if auth isn't made with PAM  
 
-2. Configure webserver
+#### 2. Configure webserver
   * *Install apache2*  
     `apt install apache2 apache2-suexec-custom`  
     `a2enmod suexec proxy_fcgi actions alias rewrite headers ssl`
@@ -122,7 +122,7 @@ and take note of mySQL password if auth isn't made with PAM
     Restart web server  
     `service nginx restart`
 
-3. Install mail server (*optional*)  
+#### 3. Install mail server (*optional*)  
 ```
 # install services
 apt install postfix postgrey postsrsd spamassassin spamc
@@ -224,10 +224,11 @@ service postfix restart
 ```
 
 ### Install ishi
+#### 1. Clone git repo and configure
 `git clone https://github.com/dalvlex/ishi /root/ishi`  
 Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
 **Don't forget to configure ishi in etc/settings**  
 
-### Install crontab  
+#### 2. Install crontab
 `crontab /root/ishi/etc/templates/crontab.template`  
 
