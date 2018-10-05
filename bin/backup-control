@@ -50,9 +50,9 @@ function read_args($arg){
 }
 
 function show_help($name){
-	echo " List backups:\n   {$name} act=list [name=<name> (default ALL)]\n";
-	echo " Backup rotate:\n   {$name} act=rotate [name=<name> (default ALL)]\n";
-	echo " Backup create:\n   {$name} act=backup name=<name/ALL> type=<user/daily/weekly/ALL>\n";
-	echo " Restore:\n   {$name} act=restore name=<name> archive=<archive_file>\n";
+	echo "\n List backups:\n   {$name} act=list [name=<name> (default ALL)]\n\n";
+	echo " Backup rotate:\n   {$name} act=rotate [name=<name> (default ALL)]\n\n";
+	echo " Backup create:\n   {$name} act=backup name=<name/ALL> type=<user/daily/weekly/ALL>\n\n";
+	echo " Restore:\n   {$name} act=restore name=<name> archive=<archive_file>\n\n";
 }
 ?>
