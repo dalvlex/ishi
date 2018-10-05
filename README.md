@@ -2,13 +2,13 @@
 Ishi site management (for Ubuntu)
 
 ### System prerequisites
-1. Fix environment lang variables in ssh and disable password auth  
+#### 1. Fix environment lang variables in ssh and disable password auth  
 `sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
 `sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
 `service ssh restart`  
 **relogin to SSH**
 
-2. Update the system  
+#### 2. Update the system  
 `apt update`  
 `apt upgrade`
 
@@ -79,7 +79,7 @@ and take note of mySQL password if auth isn't made with PAM
     # also edit /etc/apache2/apache2.conf and for LogFormat directives replace %h with %a everywhere!
     ```
 
-    **Restart web server**  
+    Restart web server  
     `service apache2 restart`
 
   * *Install nginx*  
@@ -119,7 +119,7 @@ and take note of mySQL password if auth isn't made with PAM
     real_ip_header CF-Connecting-IP;
     ```
 
-    **Restart web server**  
+    Restart web server  
     `service nginx restart`
 
 3. Install mail server (*optional*)  
