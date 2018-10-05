@@ -173,7 +173,7 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 	}
 
 	//create system account with ID over 2000.
-	$keep=`useradd -K UID_MIN=9000 -K UID_MAX=10000 -c "{$domain}|{$backups}" -s /bin/bash -m {$name}`;
+	$keep=`useradd -K UID_MIN=9000 -K UID_MAX=10000 -c "{$domain}|{$backups}|{$email}" -s /bin/bash -m {$name}`;
 
 	//check to see if user was created
 	if(!site_is_check($name)){
@@ -193,7 +193,6 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 
 	//create mysql account
 	$keep.=`mysql --execute="GRANT ALL PRIVILEGES ON {$name}.* To '{$name}'@'localhost' IDENTIFIED BY '{$mysql_pass}';"`;
-	//$keep.=`mysql --execute="GRANT ALL PRIVILEGES ON {$name}.* To '{$name}'@'10.130.4.119' IDENTIFIED BY '{$mysql_pass}';"`;
 
 	//set mysql autologin file
 	file_put_contents("/home/{$name}/.my.cnf", "[client]\nuser={$name}\npassword={$mysql_pass}\n");
