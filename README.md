@@ -1,11 +1,6 @@
 # ishi
 Ishi site management (for Ubuntu)
 
-### Install ishi
-`git clone https://github.com/dalvlex/ishi /root/ishi`  
-Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
-**Don't forget to configure ishi in etc/settings**
-
 ### System prerequisites
 1. Fix environment lang variables in ssh and disable password auth  
 `sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
@@ -17,7 +12,7 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 `apt update`  
 `apt upgrade`
 
-### Enable swap on low resource servers
+### Enable swap on low resource servers (*optional*)
 `fallocate -l 2G /swapfile`  
 `chmod 600 /swapfile`  
 `mkswap /swapfile`  
@@ -29,7 +24,7 @@ Ishi is meant to be used as root and installed under /root/ishi, probably it wou
 `sysctl vm.vfs_cache_pressure=50`  
 `echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf`  
 
-### Amazon S3 backup storage
+### Configure Amazon S3 backup storage (*optional*)
 1. Install **s3fs**  
 `apt install s3fs`  
 2. Create a new bucket *ishi-backups-bucket* on Amazon S3  
@@ -127,7 +122,7 @@ and take note of mySQL password if auth isn't made with PAM
     **Restart web server**  
     `service nginx restart`
 
-3. Install mail server if needed  
+3. Install mail server (*optional*)  
 ```
 # install services
 apt install postfix postgrey postsrsd spamassassin spamc
@@ -228,7 +223,11 @@ service postsrsd restart
 service postfix restart
 ```
 
-4. Install crontab  
-`crontab /root/ishi/etc/templates/crontab.template`  
+### Install ishi
+`git clone https://github.com/dalvlex/ishi /root/ishi`  
+Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
+**Don't forget to configure ishi in etc/settings**  
 
+### Install crontab  
+`crontab /root/ishi/etc/templates/crontab.template`  
 
