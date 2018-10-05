@@ -6,7 +6,7 @@ function backup_site($name="ALL",$type="ALL"){
 	global $f_settings, $backup_types, $pwd;
 	$settings=read_settings($f_settings);
 	$list=read_list();
-	
+
 	if($name=="ALL"){
 		if($type=="ALL"){
 			foreach($list as $nk => $nv){
