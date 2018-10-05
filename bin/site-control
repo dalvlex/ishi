@@ -15,16 +15,24 @@ function read_args($arg){
 		isset($arg['type'])&&(strcmp(trim($arg['type']),'build')===0||strcmp(trim($arg['type']),'live')===0)&&
 		@strlen($arg['name'])>=2&&
 		@strlen($arg['domain'])>=2&&
-		@strlen($arg['email'])>=2&&
+		@strlen($arg['email'])>=2&& strpos($arg['email'],'@')!==FALSE&& strpos($arg['email'],':')===FALSE&& strpos($arg['email'],"\\")===FALSE&& strpos($arg['email'],' ')===FALSE&&
 		@strlen($arg['ssh'])>=2&&
-		(!isset($arg['backups'])|| strcmp(trim($arg['backups']),'on')===0|| strcmp(trim($arg['backups']),'off')===0)
+		(!isset($arg['backups'])|| strcmp(trim($arg['backups']),'on')===0|| strcmp(trim($arg['backups']),'off')===0)&&
+		(!isset($arg['ssl'])|| strcmp(trim($arg['ssl']),'enable')===0|| strcmp(trim($arg['ssl']),'disable')===0)
 		){
 			if(strlen($arg['name'])>10){
 				echo "Error: 'name' must have a maximum of 10 characters.\n";
 				exit;
 			}
-			if(site_add($arg['type'],$arg['name'],$arg['domain'],$arg['email'],(isset($arg['backups'])&&$arg['backups']=="off")?0:1,$arg['ssh'])){
-				echo "Site added! ".(isset($arg['backups'])&&$arg['backups']=="off"?"Backups OFF!":"Backups ON!")."\n";
+			if(site_add($arg['type'],
+				$arg['name'],
+				$arg['domain'],
+				$arg['email'],
+				(isset($arg['backups'])&&$arg['backups']=="off")?0:1,
+				(isset($arg['ssl'])&&$arg['ssl']=="disable")?0:1,
+				$arg['ssh'])
+				){
+				echo "Site added! ".(isset($arg['backups'])&&$arg['backups']=="off"?"Backups OFF!":"Backups ON!")." ".(isset($arg['ssl'])&&$arg['ssl']=="disable"?"SSL OFF!":"SSL ON!")."\n";
 			}else{
 				echo "Add failed!\n";
 			}
@@ -51,9 +59,13 @@ function read_args($arg){
 		@strlen($arg['ssh'])>=2){
 		set_ssh_key($arg['name'],$arg['ssh']);
 	}
-	elseif(strcmp(trim($arg['act']),'toggle')===0&&
+	elseif(strcmp(trim($arg['act']),'togglebackups')===0&&
 		@strlen($arg['name'])>=2){
 		toggle_backups($arg['name']);
+	}
+	elseif(strcmp(trim($arg['act']),'enablessl')===0&&
+		@strlen($arg['name'])>=2){
+		enable_ssl($arg['name']);
 	}
 	else{
 		show_help($arg['script_name']);
@@ -61,12 +73,13 @@ function read_args($arg){
 }
 
 function show_help($name){
-	echo " Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> email=<ssl-email@a-domain.com> ssh=<all|key1,key3,key4> [backups=<on/off> (default on)]\n";
-	echo " Del site:\n   {$name} act=del name=<site_name> [backups=<keep/delete> (default keep)]\n";
-	echo " List sites:\n   {$name} act=list\n";
-	echo " List SSH keys:\n   {$name} act=listkeys\n";
-	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|key1,key3,key4>\n";
-	echo " Toggle backups ON/OFF:\n   {$name} act=toggle name=<site_name>\n";
+	echo "\n Add site:\n   {$name} act=add type=<build/live> name=<name (10chr)> domain=<domain> email=<ssl-email@a-domain.com> ssh=<all|key1,key3,key4> [backups=<on/off> (default on)] [ssl=<enable/disable> (default enable)]\n\n";
+	echo " Del site:\n   {$name} act=del name=<site_name> [backups=<keep/delete> (default keep)]\n\n";
+	echo " List sites:\n   {$name} act=list\n\n";
+	echo " List SSH keys:\n   {$name} act=listkeys\n\n";
+	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|key1,key3,key4>\n\n";
+	echo " Toggle backups ON/OFF:\n   {$name} act=togglebackups name=<site_name>\n\n";
+	echo " Enable SSL:\n   {$name} act=enablessl name=<site_name>\n\n";
 }
 
 
