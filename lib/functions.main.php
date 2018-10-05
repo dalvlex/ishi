@@ -289,7 +289,7 @@ function generate_ssl($name, $email, $domain){
 
 function enable_ssl($name){
 	$list=read_list();
-	print_r($list);exit;
+
 	if(isset($list[$name])){
 		generate_ssl($name, $list[$name]['email'], $list[$name]['domain']);
 	}
