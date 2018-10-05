@@ -1,16 +1,22 @@
 # Backup all sites
-0 5 * * * /root/ishi/bin/backup-control act=backup name=ALL type=daily > /dev/null 2>&1
-0 7 6 * * /root/ishi/bin/backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
+# Run at 4:05 AM daily
+5 4 * * * /root/ishi/bin/backup-control act=backup name=ALL type=daily > /dev/null 2>&1
+# Run at 5:05 AM every Saturday
+5 5 * * 6 /root/ishi/bin/backup-control act=backup name=ALL type=weekly > /dev/null 2>&1
 
 # Rotate the backups according to etc/settings
-45 * * * * /root/ishi/bin/backup-control act=rotate > /dev/null 2>&1
+# Run at 00:50, 06:50, 12:50, 18:50 daily
+50 */6 * * * /root/ishi/bin/backup-control act=rotate > /dev/null 2>&1
 
-# Renew LetsEncrypt certificates weekly
+# Renew LetsEncrypt certificates
+# Run weekly
 @weekly /usr/bin/letsencrypt renew && /usr/sbin/service nginx reload > /dev/null 2>&1
 
 # Renew Ishi code from GitHub daily
-@daily /usr/bin/git -C /root/ishi reset --hard > /dev/null 2>&1 && git -C /root/ishi clean -f > /dev/null 2>&1 && git -C /root/ishi pull > /dev/null 2>&1
+# Run at at 00 minute, every hour
+0 * * * * /usr/bin/git -C /root/ishi reset --hard > /dev/null 2>&1 && git -C /root/ishi clean -f > /dev/null 2>&1 && git -C /root/ishi pull > /dev/null 2>&1
 
 # Renew fail2filters from GitHub daily
-@daily /usr/bin/git -C /root/fail2filters reset --hard > /dev/null 2>&1 && git -C /root/fail2filters clean -f > /dev/null 2>&1 && git -C /root/fail2filters pull > /dev/null 2>&1 && /root/fail2filters/install 1 > /dev/null 2>&1
+# Run at at 00 minute, every hour
+0 * * * * /usr/bin/git -C /root/fail2filters reset --hard > /dev/null 2>&1 && git -C /root/fail2filters clean -f > /dev/null 2>&1 && git -C /root/fail2filters pull > /dev/null 2>&1 && /root/fail2filters/install 1 > /dev/null 2>&1
 
