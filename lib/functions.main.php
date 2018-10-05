@@ -392,7 +392,7 @@ function list_sites(){
 	$a2ensites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-enabled/';
 	$a2ensites_conf=($settings['.web'] == 'nginx'?'':'.conf');
 
-	echo "Name\t\t\t\tBackup\tActive\tDomain\n";
+	echo "Name\t\t\t\tActive\tSSL\tBackup\tDomain\n";
 	foreach($list as $lk => $lv){
 		$t=4-floor(strlen($lk)/8);
 		$tt='';
@@ -401,7 +401,7 @@ function list_sites(){
 		}
 
 		echo "-----------------------------------------------------------------------------------\n";
-		echo "{$lk}{$tt}{$lv['backups']}\t".(is_file($a2ensites.$lk.$a2ensites_conf)?"1":"0")."\t{$lv['domain']}\n";
+		echo "{$lk}{$tt}".(is_file($a2ensites.$lk.$a2ensites_conf)?"Yes":"No")."\t".(is_dir('/etc/letsencrypt/live/'.$lv['domain'])?"Yes":"No")."\t".($lv['backups']?"Yes":"No")."\t{$lv['domain']}\n";
 	}
 }
 
