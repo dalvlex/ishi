@@ -12,6 +12,15 @@ Ishi site management (for Ubuntu)
 `apt update`  
 `apt upgrade`
 
+### Install ishi
+#### 1. Clone git repo and configure
+`git clone https://github.com/dalvlex/ishi /root/ishi`  
+Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
+**Don't forget to configure ishi in etc/settings**  
+
+#### 2. Install crontab
+`crontab /root/ishi/etc/templates/crontab.template`  
+
 ### Enable swap on low resource servers (*optional*)
 `fallocate -l 2G /swapfile;`  
 `chmod 600 /swapfile;`  
@@ -23,15 +32,6 @@ Ishi site management (for Ubuntu)
 `echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf;`  
 `sysctl vm.vfs_cache_pressure=50;`  
 `echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf;`  
-
-### Install ishi
-#### 1. Clone git repo and configure
-`git clone https://github.com/dalvlex/ishi /root/ishi`  
-Ishi is meant to be used as root and installed under /root/ishi, probably it would work as another user with sudo, but this is not tested!  
-**Don't forget to configure ishi in etc/settings**  
-
-#### 2. Install crontab
-`crontab /root/ishi/etc/templates/crontab.template`  
 
 ### Configure Amazon S3 backup storage (*optional*)
 1. Install **s3fs**  
