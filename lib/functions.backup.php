@@ -201,7 +201,9 @@ function restore_from($name,$file){
 	}else{
 		return FALSE;
 	}
-	$keep.=`tar xzf {$settings['.backup_path']}/{$file} -C /home/{$name}/`;
+	$keep.=`cp {$settings['.backup_path']}/{$file} /tmp/{$file}`;
+	$keep.=`tar xzf /tmp/{$file} -C /home/{$name}/`;
+	$keep.=`rm -rf /tmp/{$file}`;
 
 	//empty database and load new one
 	$keep.=`mysql --execute="DROP DATABASE IF EXISTS {$name};"`;
