@@ -52,15 +52,15 @@ function backup_site($name="ALL",$type="ALL"){
 
 	$date=date("Ymd_His",time());
 
-	$keep=`mysqldump {$name} > /tmp/database_dump.sql; chown -R {$name}:{$name} /tmp/database_dump.sql`;
-	$keep=`tar czf {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C /tmp database_dump.sql`;
+	$keep=`mysqldump {$name} > {$pwd}/tmp/database_dump.sql; chown -R {$name}:{$name} {$pwd}/tmp/database_dump.sql`;
+	$keep=`tar czf {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C {$pwd}/tmp database_dump.sql`;
 
 	// check and reconnect mountpoint if necessary
 	check_mountpoint($settings['.backup_path']);
 
 	// move backup to Amazon S3
 	$keep=`mv {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz {$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz`;
-	$keep=`rm -rf /tmp/database_dump.sql`;
+	$keep=`rm -rf {$pwd}/tmp/database_dump.sql`;
 
 	if(is_file("{$settings['.backup_path']}/{$name}-{$type}_{$date}.tar.gz")){
 		return TRUE;
@@ -185,7 +185,7 @@ function list_backups_nice($name="ALL"){
 }
 
 function restore_from($name,$file){
-	global $f_settings;
+	global $pwd, $f_settings;
 	$settings=read_settings($f_settings);
 
 	//check if we have a backup with that file name
@@ -201,9 +201,9 @@ function restore_from($name,$file){
 	}else{
 		return FALSE;
 	}
-	$keep.=`cp {$settings['.backup_path']}/{$file} /tmp/{$file}`;
-	$keep.=`tar xzf /tmp/{$file} -C /home/{$name}/`;
-	$keep.=`rm -rf /tmp/{$file}`;
+	$keep.=`cp {$settings['.backup_path']}/{$file} {$pwd}/tmp/{$file}`;
+	$keep.=`tar xzf {$pwd}/tmp/{$file} -C /home/{$name}/`;
+	$keep.=`rm -rf {$pwd}/tmp/{$file}`;
 
 	//empty database and load new one
 	$keep.=`mysql --execute="DROP DATABASE IF EXISTS {$name};"`;
