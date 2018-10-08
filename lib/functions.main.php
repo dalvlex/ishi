@@ -471,7 +471,7 @@ function list_sshkeys(){
 
 	$keys=$settings['.ssh'];
 	echo "SSH key name\n";
-	echo "-----------------------------------------------------------------------------------\n";
+	echo "--------------------------------------------------------------------------------------------------------------------------\n";
 	foreach($keys as $fk => $fv){
 		echo "- {$fk}\n";
 	}
@@ -484,9 +484,11 @@ function list_sites(){
 	$list=read_list();
 	ksort($list);
 	$a2ensites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-enabled/';
+	$a2avsites='/etc/'.($settings['.web'] == 'nginx'?'nginx':'apache2').'/sites-available/';
+
 	$a2ensites_conf=($settings['.web'] == 'nginx'?'':'.conf');
 
-	echo "Name\t\t\t\tActive\tSSL\tBackup\tDomain\n";
+	echo "Name\t\t\t\tActive\t\tSSL Cert\tSSL ON\t\tBackup\tDomain\n";
 	foreach($list as $lk => $lv){
 		$t=4-floor(strlen($lk)/8);
 		$tt='';
@@ -494,8 +496,8 @@ function list_sites(){
 			$tt.="\t";
 		}
 
-		echo "-----------------------------------------------------------------------------------\n";
-		echo "{$lk}{$tt}".(is_file($a2ensites.$lk.$a2ensites_conf)?"Yes":"No")."\t".(is_dir('/etc/letsencrypt/live/'.$lv['domain'])?"Yes":"No")."\t".($lv['backups']?"Yes":"No")."\t{$lv['domain']}\n";
+		echo "--------------------------------------------------------------------------------------------------------------------------\n";
+		echo "{$lk}{$tt}".(is_file($a2ensites.$lk.$a2ensites_conf)?"Yes":"No")."\t\t".(is_dir('/etc/letsencrypt/live/'.$lv['domain'])?"Yes":"No")."\t\t".(trim(`grep -c "#ssl#" {$a2avsites}{$lk}{$a2ensites_conf}`)?"No":"Yes")."\t\t".($lv['backups']?"Yes":"No")."\t{$lv['domain']}\n";
 	}
 }
 
