@@ -88,15 +88,16 @@ function toggle_active($name){
 		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
 
 		if(is_file($enconf)){
-			$keep.=`rm -rf $enconf`;
-			$return=!is_file($enconf)?TRUE:FALSE;
+			$keep.=`rm -rf {$enconf}`;
+			$return = is_link($enconf)?FALSE:TRUE;
 		}
 		else {
 			$keep.=`ln -s {$avconf} {$enconf}`;
-			$return=!is_file($enconf)?FALSE:TRUE;
+			$return = is_link($enconf)?TRUE:FALSE;
 		}
 
 		$keep.=`service {$webserver} restart`;
+
 	}
 	return $return;
 }
