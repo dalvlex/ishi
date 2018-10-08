@@ -65,7 +65,7 @@ function toggle_backups($name){
 		`usermod -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" {$name}`;
 	}
 
-	$changed = `grep -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" /etc/passwd`;
+	$changed = trim(`grep -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" /etc/passwd`);
 	if($changed) return TRUE;
 
 	return FALSE;
@@ -354,7 +354,7 @@ function toggle_ssl($name){
 		$confsuffix = strcmp($settings['.web'],'nginx'===0)?'':'.conf';
 
 		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
-		$isdeactivated = `grep -c "#ssl#" /etc/nginx/sites-available/live_golans`;
+		$isdeactivated = trim(`grep -c "#ssl#" {$avconf}`);
 		$sslexists = is_dir('/etc/letsencrypt/live/'.$list[$name]['domain']);
 
 		if(is_file($avconf) && $sslexists === TRUE){
