@@ -67,7 +67,28 @@ function toggle_backups($name){
 }
 
 function toggle_active($name){
+	global $f_settings;
 
+	$keep='';
+	$settings=read_settings($f_settings);
+	$list=read_list();
+
+	if(isset($list[$name])){
+		$webserver = strcmp($settings['.web'],'nginx'===0)?'nginx':'apache2';
+		$confsuffix = strcmp($settings['.web'],'nginx'===0)?'':'.conf';
+
+		$enconf = "/etc/{$webserver}/sites-enabled/{$name}{$confsuffix}";
+		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
+
+		if(is_file($enconf)){
+			$keep.=`rm -rf $enconf`;
+		}
+		else {
+			$keep.=`ln -s {$avconf} {$enconf}`;
+		}
+
+		$keep.=`service {$webserver} restart`;
+	}
 }
 
 function generate_password($length = 9, $add_dashes = false, $available_sets = 'lud'){
