@@ -64,6 +64,11 @@ function toggle_backups($name){
 		$list[$name]['backups']=abs($list[$name]['backups']-=1);
 		`usermod -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" {$name}`;
 	}
+
+	$changed = `grep -c "{$list[$name]['domain']}|{$list[$name]['backups']}|{$list[$name]['email']}" /etc/passwd`;
+	if($changed) return TRUE;
+
+	return FALSE;
 }
 
 function toggle_active($name){
@@ -72,6 +77,8 @@ function toggle_active($name){
 	$keep='';
 	$settings=read_settings($f_settings);
 	$list=read_list();
+
+	$return = FALSE;
 
 	if(isset($list[$name])){
 		$webserver = strcmp($settings['.web'],'nginx'===0)?'nginx':'apache2';
@@ -82,13 +89,16 @@ function toggle_active($name){
 
 		if(is_file($enconf)){
 			$keep.=`rm -rf $enconf`;
+			$return=!is_file($enconf)?TRUE:FALSE;
 		}
 		else {
 			$keep.=`ln -s {$avconf} {$enconf}`;
+			$return=!is_file($enconf)?FALSE:TRUE;
 		}
 
 		$keep.=`service {$webserver} restart`;
 	}
+	return $return;
 }
 
 function generate_password($length = 9, $add_dashes = false, $available_sets = 'lud'){
@@ -324,10 +334,47 @@ function enable_ssl($name){
 	if(isset($list[$name])){
 		generate_ssl($name, $list[$name]['email'], $list[$name]['domain']);
 	}
+
+	$sslexists = is_dir('/etc/letsencrypt/live/'.$list[$name]['domain']);
+	if($sslexists === TRUE) return TRUE;
+
+	return FALSE;
 }
 
-function deactivate_ssl($name){
+function toggle_ssl($name){
+	global $f_settings;
 
+	$keep='';
+	$settings=read_settings($f_settings);
+	$list=read_list();
+
+	if(isset($list[$name])){
+		$webserver = strcmp($settings['.web'],'nginx'===0)?'nginx':'apache2';
+		$confsuffix = strcmp($settings['.web'],'nginx'===0)?'':'.conf';
+
+		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
+		$isdeactivated = `grep -c "#ssl#" /etc/nginx/sites-available/live_golans`;
+		$sslexists = is_dir('/etc/letsencrypt/live/'.$list[$name]['domain']);
+
+		if(is_file($avconf) && $sslexists === TRUE){
+			if($isdeactivated){
+				$keep.=`sed -i 's/#ssl#//g' {$avconf}`;
+			}
+			else {
+				if($webserver == 'nginx'){
+					$keep.=`sed -i '/ssl_/ s=^=#ssl#=' {$avconf}`;
+					$keep.=`sed -i '/return 301 https/ s=^=#ssl#=' {$avconf}`;
+				}
+				else {
+					$keep.=`sed -i '/Rewrite/ s=^=#ssl#=' {$avconf}`;
+					$keep.=`sed -i '/SSL/ s=^=#ssl#=' {$avconf}`;
+				}
+			}
+			$keep.=`service {$webserver} restart`;
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 function site_del($name, $backups=0){
