@@ -66,6 +66,10 @@ function toggle_backups($name){
 	}
 }
 
+function toggle_active($name){
+
+}
+
 function generate_password($length = 9, $add_dashes = false, $available_sets = 'lud'){
 	$sets = array();
 	if(strpos($available_sets, 'l') !== false)
@@ -114,6 +118,9 @@ function set_ssh_key($name,$ssh){
 	if($ssh == 'all'){
 		foreach($keys as $fk => $fv)
 			$authorized_keys .= "{$settings['.ssh'][$fk]}\n";
+	}
+	elseif($ssh = 'none'){
+		$authorized_keys = '';
 	}
 	else{
 		if(strpos($ssh, ',')){
@@ -296,6 +303,10 @@ function enable_ssl($name){
 	if(isset($list[$name])){
 		generate_ssl($name, $list[$name]['email'], $list[$name]['domain']);
 	}
+}
+
+function deactivate_ssl($name){
+
 }
 
 function site_del($name, $backups=0){

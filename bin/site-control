@@ -59,13 +59,21 @@ function read_args($arg){
 		@strlen($arg['ssh'])>=2){
 		set_ssh_key($arg['name'],$arg['ssh']);
 	}
-	elseif(strcmp(trim($arg['act']),'togglebackups')===0&&
+	elseif(strcmp(trim($arg['act']),'toggleactive')===0&&
 		@strlen($arg['name'])>=2){
 		toggle_backups($arg['name']);
+	}
+	elseif(strcmp(trim($arg['act']),'togglebackups')===0&&
+		@strlen($arg['name'])>=2){
+		toggle_active($arg['name']);
 	}
 	elseif(strcmp(trim($arg['act']),'enablessl')===0&&
 		@strlen($arg['name'])>=2){
 		enable_ssl($arg['name']);
+	}
+	elseif(strcmp(trim($arg['act']),'deactivatessl')===0&&
+		@strlen($arg['name'])>=2){
+		deactivate_ssl($arg['name']);
 	}
 	else{
 		show_help($arg['script_name']);
@@ -77,9 +85,11 @@ function show_help($name){
 	echo " Del site:\n   {$name} act=del name=<site_name> [backups=<keep/delete> (default keep)]\n\n";
 	echo " List sites:\n   {$name} act=list\n\n";
 	echo " List SSH keys:\n   {$name} act=listkeys\n\n";
-	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|key1,key3,key4>\n\n";
+	echo " Change SSH keys:\n   {$name} act=changekeys name=<all|site_name> ssh=<all|none|key1,key3,key4>\n\n";
+	echo " Toggle active state ON/OFF:\n   {$name} act=toggleactive name=<site_name>\n\n";
 	echo " Toggle backups ON/OFF:\n   {$name} act=togglebackups name=<site_name>\n\n";
 	echo " Enable SSL:\n   {$name} act=enablessl name=<site_name>\n\n";
+	echo " Deactivate SSL:\n   {$name} act=deactivate name=<site_name>\n\n";
 }
 
 
