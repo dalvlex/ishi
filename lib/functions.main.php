@@ -318,6 +318,8 @@ function generate_ssl($name, $email, $domain){
 
 	$keep=`/usr/bin/letsencrypt certonly --non-interactive --webroot --webroot-path /home/{$name}/www/ --renew-by-default --email {$email} --text --agree-tos -d {$domain} -d www.{$domain}`;
 
+	if(!is_dir('/etc/letsencrypt/live/'.$domain)) return FALSE;
+
 	// add SSL certificate to nginx or apache2
 	if($settings['.web'] == 'nginx'){
 		$keep.=`sed -i 's/#ssl#//g' /etc/nginx/sites-available/{$name}`;
@@ -327,6 +329,8 @@ function generate_ssl($name, $email, $domain){
 		$keep.=`sed -i 's/#ssl#//g' /etc/apache2/sites-available/{$name}.conf`;
 		$keep.=`service apache2 restart`;
 	}
+
+	return TRUE;
 }
 
 function enable_ssl($name){
