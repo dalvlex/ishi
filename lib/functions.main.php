@@ -155,7 +155,7 @@ function set_ssh_key($name,$ssh){
 		foreach($keys as $fk => $fv)
 			$authorized_keys .= "{$settings['.ssh'][$fk]}\n";
 	}
-	elseif($ssh = 'none'){
+	elseif($ssh == 'none'){
 		$authorized_keys = '';
 	}
 	else{
