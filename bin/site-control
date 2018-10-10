@@ -32,9 +32,8 @@ function read_args($arg){
 				(isset($arg['ssl'])&&$arg['ssl']=="disable")?0:1,
 				$arg['ssh'])
 				){
-					$arg['backups'] = isset($arg['backups'])&&$arg['backups']=="off"?0:1;
 					$arg['ssl'] = isset($arg['ssl'])&&$arg['ssl']=="disable"?0:1;
-					$backups_enabled = trim(`grep -c "{$arg['domain']}|{$arg['backups']}|{$arg['email']}" /etc/passwd`);
+					$backups_enabled = trim(`grep -c "{$arg['domain']}|1|{$arg['email']}" /etc/passwd`);
 					$ssl_enabled = is_dir('/etc/letsencrypt/live/'.$arg['domain']);
 					echo "Site added! ".($backups_enabled?"Backups ON!":"Backups OFF!")." ".($ssl_enabled===TRUE?"SSL ON!":"SSL OFF!")."\n";
 			}else{
