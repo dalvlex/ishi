@@ -340,11 +340,13 @@ function generate_ssl($name, $email, $domain){
 function enable_ssl($name){
 	$list=read_list();
 
+	$sslexists = FALSE;
+
 	if(isset($list[$name])){
 		generate_ssl($name, $list[$name]['email'], $list[$name]['domain']);
+		$sslexists = is_dir('/etc/letsencrypt/live/'.$list[$name]['domain']);
 	}
 
-	$sslexists = is_dir('/etc/letsencrypt/live/'.$list[$name]['domain']);
 	if($sslexists === TRUE) return TRUE;
 
 	return FALSE;
