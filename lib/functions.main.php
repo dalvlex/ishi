@@ -25,11 +25,15 @@ function read_settings($file){
 	//store vars & disregard comments
 	foreach($file as $fv){
 		if (strpos($fv, '.')===0&&strpos($fv, '=')!==FALSE){
+			if(strpos($fv, '==')!==FALSE) { $fv=str_replace('==', '_____', $fv); }
+
 			$fv=explode('=',$fv);
 			if(strpos($fv[1],'/')===0){
 				$fv[1] = rtrim($fv[1], '/');
 			}
+
 			if($fv[0] == '.ssh'){
+				if(strpos($fv[2], '_____')!==FALSE) { $fv[2]=str_replace('_____', '==', $fv[2]); }
 				$settings['.ssh'][$fv[1]]=$fv[2];
 			}
 			else{
