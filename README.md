@@ -5,6 +5,7 @@ Ishi site management (for Ubuntu)
 #### 1. Fix environment lang variables in ssh and disable password auth  
 `sed -i 's/AcceptEnv LANG LC_\*/#AcceptEnv LANG LC_\*/g' /etc/ssh/sshd_config`  
 `sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
+`sed -i 's/#PasswordAuthentication no/PasswordAuthentication no/g' /etc/ssh/sshd_config`  
 `service ssh restart`  
 **relogin to SSH**
 
