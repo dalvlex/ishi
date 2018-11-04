@@ -5,4 +5,6 @@ lock_fileedit=/home/!USERNAME!/www/
 #lock read by owner only for FILE
 lock_ownerread=/home/!USERNAME!/www/wp-config.php
 #allow upload but deny php execution for DIR
+allowwrite_denyphp=/home/!USERNAME!/www/.well-known/acme-challenge
 allowwrite_denyphp=/home/!USERNAME!/www/wp-content/uploads
+

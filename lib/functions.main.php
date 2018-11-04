@@ -226,7 +226,7 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 	$uid=trim(`grep {$name} /etc/passwd |awk -F ':' '{print \$3}'`);
 
 	//create folders
-	$keep.=`mkdir -p /home/{$name}/www`;
+	$keep.=`mkdir -p /home/{$name}/www/.well-known/acme-challenge`;
 
 	//create mysql db
 	$keep.=`mysql --execute="CREATE DATABASE {$name};"`;
