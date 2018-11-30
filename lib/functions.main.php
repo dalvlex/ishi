@@ -85,8 +85,8 @@ function toggle_active($name){
 	$return = FALSE;
 
 	if(isset($list[$name])){
-		$webserver = strcmp($settings['.web'],'nginx'===0)?'nginx':'apache2';
-		$confsuffix = strcmp($settings['.web'],'nginx'===0)?'':'.conf';
+		$webserver = strcmp($settings['.web'],'nginx') === 0 ? 'nginx':'apache2';
+		$confsuffix = strcmp($settings['.web'],'nginx') === 0 ? '':'.conf';
 
 		$enconf = "/etc/{$webserver}/sites-enabled/{$name}{$confsuffix}";
 		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
@@ -360,8 +360,8 @@ function toggle_ssl($name){
 	$list=read_list();
 
 	if(isset($list[$name])){
-		$webserver = strcmp($settings['.web'],'nginx'===0)?'nginx':'apache2';
-		$confsuffix = strcmp($settings['.web'],'nginx'===0)?'':'.conf';
+		$webserver = strcmp($settings['.web'],'nginx') === 0 ? 'nginx':'apache2';
+		$confsuffix = strcmp($settings['.web'],'nginx') === 0 ? '':'.conf';
 
 		$avconf = "/etc/{$webserver}/sites-available/{$name}{$confsuffix}";
 		$isdeactivated = trim(`grep -c "#ssl#" {$avconf}`);
