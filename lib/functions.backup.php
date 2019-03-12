@@ -52,7 +52,7 @@ function backup_site($name="ALL",$type="ALL"){
 
 	$date=date("Ymd_His",time());
 
-	$keep=`mysqldump {$name} > {$pwd}/tmp/database_dump.sql; chown -R {$name}:{$name} {$pwd}/tmp/database_dump.sql`;
+	$keep=`mysqldump --default-character-set=utf8mb4 {$name} > {$pwd}/tmp/database_dump.sql; chown -R {$name}:{$name} {$pwd}/tmp/database_dump.sql`;
 	$keep=`tar czf {$pwd}/tmp/{$name}-{$type}_{$date}.tar.gz -C /home/{$name} www -C {$pwd}/tmp database_dump.sql`;
 
 	// check and reconnect mountpoint if necessary
