@@ -223,7 +223,7 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 		return FALSE;
 	}
 
-	$uid=trim(`grep {$name} /etc/passwd |awk -F ':' '{print \$3}'`);
+	$uid=trim(`grep "{$name}:" /etc/passwd |awk -F ':' '{print \$3}'`);
 
 	//create folders
 	$keep.=`mkdir -p /home/{$name}/www/.well-known/acme-challenge`;
