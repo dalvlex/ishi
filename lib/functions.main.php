@@ -223,7 +223,9 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 		return FALSE;
 	}
 
-	$uid=trim(`grep "{$name}:" /etc/passwd |awk -F ':' '{print \$3}'`);
+//      $uid=trim(`grep "{$name}:" /etc/passwd |awk -F ':' '{print \$3}'`);
+        $uid=trim(`find /etc/php/{$settings['.php']}/fpm/pool.d/ -type f -exec grep 'listen = ' {} \; |grep ':' |awk -F ':' '{print \$NF}' |sort |tail -n1`);
+        $uid = is_numeric($uid) ? $uid+1 : 9000;
 
 	//create folders
 	$keep.=`mkdir -p /home/{$name}/www/.well-known/acme-challenge`;
