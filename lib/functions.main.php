@@ -237,7 +237,8 @@ function site_add($type,$name,$domain,$email,$backups=1,$ssl=1,$ssh){
 	$mysql_pass=generate_password(24);
 
 	//create mysql account
-	$keep.=`mysql --execute="GRANT ALL PRIVILEGES ON {$name}.* To '{$name}'@'localhost' IDENTIFIED BY '{$mysql_pass}';"`;
+        $keep.=`mysql --execute="CREATE USER '{$name}'@'localhost' IDENTIFIED BY '{$mysql_pass}';"`;
+        $keep.=`mysql --execute="GRANT ALL PRIVILEGES ON {$name}.* To '{$name}'@'localhost';"`;
 
 	//set mysql autologin file
 	file_put_contents("/home/{$name}/.my.cnf", "[client]\nuser={$name}\npassword={$mysql_pass}\n");
